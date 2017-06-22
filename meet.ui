@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>607</width>
+    <height>723</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Создание соревнования</string>
+  </property>
+  <widget class="QLabel" name="start">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>70</y>
+     <width>59</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Начало</string>
+   </property>
+  </widget>
+  <widget class="QDateEdit" name="startDate">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>70</y>
+     <width>110</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="displayFormat">
+    <string>dd.MM.yyyy</string>
+   </property>
+   <property name="date">
+    <date>
+     <year>2017</year>
+     <month>1</month>
+     <day>1</day>
+    </date>
+   </property>
+  </widget>
+  <widget class="QLabel" name="end">
+   <property name="geometry">
+    <rect>
+     <x>190</x>
+     <y>70</y>
+     <width>81</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Окончание</string>
+   </property>
+  </widget>
+  <widget class="QDateEdit" name="endDate">
+   <property name="geometry">
+    <rect>
+     <x>270</x>
+     <y>70</y>
+     <width>110</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="displayFormat">
+    <string>dd.MM.yyyy</string>
+   </property>
+   <property name="date">
+    <date>
+     <year>2017</year>
+     <month>1</month>
+     <day>1</day>
+    </date>
+   </property>
+  </widget>
+  <widget class="QLabel" name="name">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>59</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Название</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="nameEdit">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>10</y>
+     <width>511</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="athletes">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>130</y>
+     <width>141</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Список спортсменов</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="addButton">
+   <property name="geometry">
+    <rect>
+     <x>285</x>
+     <y>220</y>
+     <width>31</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>&gt;&gt;</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="removeButton">
+   <property name="geometry">
+    <rect>
+     <x>285</x>
+     <y>260</y>
+     <width>31</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>&lt;&lt;</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="members">
+   <property name="geometry">
+    <rect>
+     <x>325</x>
+     <y>130</y>
+     <width>131</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Список участников</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="meetCount">
+   <property name="geometry">
+    <rect>
+     <x>390</x>
+     <y>70</y>
+     <width>121</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Число боев в день</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="meetCountEdit">
+   <property name="geometry">
+    <rect>
+     <x>510</x>
+     <y>70</y>
+     <width>81</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="sortitionButton">
+   <property name="geometry">
+    <rect>
+     <x>490</x>
+     <y>360</y>
+     <width>100</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Жеребьевка</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="cancel">
+   <property name="geometry">
+    <rect>
+     <x>492</x>
+     <y>690</y>
+     <width>100</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Отмена</string>
+   </property>
+  </widget>
+  <widget class="QListWidget" name="athletesList">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>150</y>
+     <width>266</width>
+     <height>201</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QListWidget" name="membersList">
+   <property name="geometry">
+    <rect>
+     <x>325</x>
+     <y>150</y>
+     <width>266</width>
+     <height>201</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="city">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>40</y>
+     <width>131</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Место проведения</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="cityEdit">
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>40</y>
+     <width>451</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="main_referee">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>400</y>
+     <width>101</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Главный судья</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="main_clerk">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>430</y>
+     <width>131</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Главный секретарь</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="mainrefCBox">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>400</y>
+     <width>471</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="mainclerkCBox">
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>430</y>
+     <width>451</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QListWidget" name="refList">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>480</y>
+     <width>266</width>
+     <height>201</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="refereeList">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>460</y>
+     <width>91</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Список судей</string>
+   </property>
+  </widget>
+  <widget class="QListWidget" name="refColList">
+   <property name="geometry">
+    <rect>
+     <x>325</x>
+     <y>480</y>
+     <width>266</width>
+     <height>201</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="refereeCol">
+   <property name="geometry">
+    <rect>
+     <x>325</x>
+     <y>460</y>
+     <width>141</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Судейская коллегия</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="raddButton">
+   <property name="geometry">
+    <rect>
+     <x>285</x>
+     <y>560</y>
+     <width>31</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>&gt;&gt;</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="rremoveButton">
+   <property name="geometry">
+    <rect>
+     <x>285</x>
+     <y>600</y>
+     <width>31</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>&lt;&lt;</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="wsortitionButton">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>360</x>
+     <y>690</y>
+     <width>121</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Без жеребьевки</string>
+   </property>
+   <property name="autoDefault">
+    <bool>true</bool>
+   </property>
+   <property name="default">
+    <bool>false</bool>
+   </property>
+   <property name="flat">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="divrings">
+   <property name="geometry">
+    <rect>
+     <x>390</x>
+     <y>100</y>
+     <width>201</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Разбивать по рингам</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="weightcatCBox">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>100</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="weigthcat">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>100</y>
+     <width>131</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Весовая категория</string>
+   </property>
+  </widget>
+ </widget>
+ <tabstops>
+  <tabstop>nameEdit</tabstop>
+  <tabstop>cityEdit</tabstop>
+  <tabstop>startDate</tabstop>
+  <tabstop>endDate</tabstop>
+  <tabstop>meetCountEdit</tabstop>
+  <tabstop>weightcatCBox</tabstop>
+  <tabstop>divrings</tabstop>
+  <tabstop>athletesList</tabstop>
+  <tabstop>addButton</tabstop>
+  <tabstop>removeButton</tabstop>
+  <tabstop>membersList</tabstop>
+  <tabstop>sortitionButton</tabstop>
+  <tabstop>mainrefCBox</tabstop>
+  <tabstop>mainclerkCBox</tabstop>
+  <tabstop>refList</tabstop>
+  <tabstop>raddButton</tabstop>
+  <tabstop>rremoveButton</tabstop>
+  <tabstop>refColList</tabstop>
+  <tabstop>wsortitionButton</tabstop>
+  <tabstop>cancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

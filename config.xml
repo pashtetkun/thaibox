@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<application>
+  <configure>
+    <id>configfile</id>
+    <filename>config.xml</filename>
+  </configure>
+  <database>
+    <id>base</id>
+    <path/>
+    <filename>basedb.db</filename>
+  </database>
+</application>

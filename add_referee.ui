@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>174</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <widget class="QLineEdit" name="fioEdit">
+   <property name="geometry">
+    <rect>
+     <x>45</x>
+     <y>10</y>
+     <width>341</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="positionList">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>127</x>
+     <y>40</y>
+     <width>261</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="fio">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>12</y>
+     <width>29</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>ФИО</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="position">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>42</y>
+     <width>112</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Должность судьи</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="region">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>73</y>
+     <width>44</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Регион</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="regionList">
+   <property name="geometry">
+    <rect>
+     <x>58</x>
+     <y>71</y>
+     <width>331</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="category">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>107</y>
+     <width>137</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Судейская категория</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="categoryList">
+   <property name="geometry">
+    <rect>
+     <x>153</x>
+     <y>105</y>
+     <width>236</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="update">
+   <property name="geometry">
+    <rect>
+     <x>220</x>
+     <y>140</y>
+     <width>77</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Обновить</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="cancel">
+   <property name="geometry">
+    <rect>
+     <x>303</x>
+     <y>140</y>
+     <width>77</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Отменить</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="add">
+   <property name="geometry">
+    <rect>
+     <x>220</x>
+     <y>140</y>
+     <width>77</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Добавить</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

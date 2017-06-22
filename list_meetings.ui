@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>637</width>
+    <height>353</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <widget class="QTableWidget" name="tableWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>611</width>
+     <height>301</height>
+    </rect>
+   </property>
+   <property name="locale">
+    <locale language="Russian" country="Russia"/>
+   </property>
+   <property name="selectionBehavior">
+    <enum>QAbstractItemView::SelectRows</enum>
+   </property>
+   <property name="columnCount">
+    <number>6</number>
+   </property>
+   <column>
+    <property name="text">
+     <string>ID</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Название</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Начало</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Конец</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Город</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Бои в день</string>
+    </property>
+   </column>
+  </widget>
+  <widget class="QPushButton" name="cancel">
+   <property name="geometry">
+    <rect>
+     <x>543</x>
+     <y>320</y>
+     <width>77</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Отмена</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="exportxls">
+   <property name="geometry">
+    <rect>
+     <x>453</x>
+     <y>320</y>
+     <width>87</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Создать xls</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="edit">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>320</y>
+     <width>79</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Изменить</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>177</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Введены недопустимые символы</string>
+  </property>
+  <widget class="QLabel" name="LString">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>39</y>
+     <width>381</width>
+     <height>61</height>
+    </rect>
+   </property>
+   <property name="locale">
+    <locale language="Russian" country="Russia"/>
+   </property>
+   <property name="text">
+    <string>Для ввода в текстовые поля допустимы только символы русского или английского алфавитов (а-я, А-Я, a-z, A-Z), цифры (0-9), разделительная точка, символ двойных кавычек &quot; и символ подчеркивания _</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+   </property>
+   <property name="wordWrap">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LDigit">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>99</y>
+     <width>381</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="locale">
+    <locale language="Russian" country="Russia"/>
+   </property>
+   <property name="text">
+    <string>Для ввода в числовые поля допустимы только цифры (0-9) и разделительная точка.</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+   </property>
+   <property name="wordWrap">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LTitle">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>381</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>18</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Недопустимый ввод!</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::AutoText</enum>
+   </property>
+   <property name="scaledContents">
+    <bool>false</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="okButton">
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>140</y>
+     <width>80</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Ok</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

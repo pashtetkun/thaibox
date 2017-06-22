@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1094</width>
+    <height>654</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <widget class="QTableWidget" name="tableWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>1061</width>
+     <height>601</height>
+    </rect>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>1031</width>
+     <height>601</height>
+    </size>
+   </property>
+   <property name="locale">
+    <locale language="Russian" country="Russia"/>
+   </property>
+   <property name="selectionBehavior">
+    <enum>QAbstractItemView::SelectRows</enum>
+   </property>
+   <property name="columnCount">
+    <number>10</number>
+   </property>
+   <attribute name="horizontalHeaderDefaultSectionSize">
+    <number>105</number>
+   </attribute>
+   <column>
+    <property name="text">
+     <string>ID</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Имя</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>День рождения</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Пол</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Вес</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Разряд</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Клуб</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Регион</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Город</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Тренер</string>
+    </property>
+   </column>
+  </widget>
+  <widget class="QSplitter" name="splitter">
+   <property name="geometry">
+    <rect>
+     <x>910</x>
+     <y>620</y>
+     <width>162</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+   <widget class="QPushButton" name="edit">
+    <property name="text">
+     <string>Изменить</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="cancel">
+    <property name="text">
+     <string>Отмена</string>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
