@@ -69,19 +69,19 @@ class MeetingDialog(QDialog):
 			self.setWindowTitle("Создание соревнования")
 
 			'''# TODO: Заполнить список спортсменов'''
-			rows = self.dbm.get_all_members()
-			for i in rows:
-				self.ui.athletesList.addItem(re.sub(r'\\', r'', i[1]))
+			members = self.dbm.get_all_members()
+			for member in members:
+				self.ui.athletesList.addItem(re.sub(r'\\', r'', member.fio))
 
-			rows = self.dbm.get_all_referees()
-			for i in rows:
-				self.ui.mainrefCBox.addItem(re.sub(r'\\', r'', i[1]))
-				self.ui.mainclerkCBox.addItem(re.sub(r'\\', r'', i[1]))
-				self.ui.refList.addItem(re.sub(r'\\', r'', i[1]))
+			referees = self.dbm.get_all_referees()
+			for referee in referees:
+				self.ui.mainrefCBox.addItem(re.sub(r'\\', r'', referee.fio))
+				self.ui.mainclerkCBox.addItem(re.sub(r'\\', r'', referee.fio))
+				self.ui.refList.addItem(re.sub(r'\\', r'', referee.fio))
 
-			rows = self.dbm.get_all_weightcategories()
-			for i in rows:
-				self.ui.weightcatCBox.addItem(re.sub(r'\\', r'', i[1]))
+			weight_categories = self.dbm.get_all_weight_categories()
+			for wcat in weight_categories:
+				self.ui.weightcatCBox.addItem(re.sub(r'\\', r'', wcat.name))
 
 			self.ui.wsortitionButton.hide()
 
@@ -345,15 +345,15 @@ class MeetingDialog(QDialog):
 
 		# Заполнить список выбора весовых категорий
 		#row = database.select("SELECT * FROM weightcategory")
-		rows = self.dbm.get_all_weightcategories()
-		for i in rows:
-			self.ui.weightcatCBox.addItem(re.sub(r'\\', r'', i[1]))
+		weight_categories = self.dbm.get_all_weight_categories()
+		for wcat in weight_categories:
+			self.ui.weightcatCBox.addItem(re.sub(r'\\', r'', wcat.name))
 
 		#row = database.select("SELECT * FROM referee")
-		rows = self.dbm.get_all_referees()
-		for i in rows:
-			self.ui.mainrefCBox.addItem(re.sub(r'\\', r'', i[1]))
-			self.ui.mainclerkCBox.addItem(re.sub(r'\\', r'', i[1]))
+		referees = self.dbm.get_all_referees()
+		for referee in referees:
+			self.ui.mainrefCBox.addItem(re.sub(r'\\', r'', referee.fio))
+			self.ui.mainclerkCBox.addItem(re.sub(r'\\', r'', referee.fio))
 
 
 
@@ -364,22 +364,28 @@ class MeetingDialog(QDialog):
 		self.ui.cityEdit.setText(re.sub(r'\\', r'', self.meet[4]))
 		self.ui.meetCountEdit.setText(str(self.meet[5]))
 		'''# TODO: Установить главного судью и секретаря'''
-		mainref = database.select('SELECT fio FROM referee WHERE id=\'' + str(self.meet[6]) + '\'')
-		mainclerk = database.select('SELECT fio FROM referee WHERE id=\'' + str(self.meet[7]) + '\'')
+		#mainref = database.select('SELECT fio FROM referee WHERE id=\'' + str(self.meet[6]) + '\'')
+		main_referee = self.dbm.get_referee(self.meet[6])
+		#mainclerk = database.select('SELECT fio FROM referee WHERE id=\'' + str(self.meet[7]) + '\'')
+		main_clerk = self.dbm.get_referee(self.meet[7])
 		'''# TODO: Заполнить списки выбора судей'''
-		self.ui.mainrefCBox.setCurrentIndex(self.ui.mainrefCBox.findText(mainref[0][0]))
-		self.ui.mainclerkCBox.setCurrentIndex(self.ui.mainclerkCBox.findText(mainclerk[0][0]))
+		self.ui.mainrefCBox.setCurrentIndex(self.ui.mainrefCBox.findText(main_referee.fio))
+		self.ui.mainclerkCBox.setCurrentIndex(self.ui.mainclerkCBox.findText(main_clerk.fio))
 		#meetref = database.select('SELECT * FROM meetreferees WHERE meeting=\'' + str(self.meet[0]) + '\'')
-		meet_refs = self.dbm.get_meet_referees(self.meet[0])
+		#meet_refs = self.dbm.get_meet_referees(self.meet[0])
+		#meet_referees = self.dbm.get_meet_referees2(self.meet[0])
+		meet_refs = self.dbm.get_meet_refs(self.meet[0])
+		refs_in_meet_ids = [item.referee_id for item in meet_refs]
+		meet_referees = [referee for referee in referees if referee.id in refs_in_meet_ids]
 		refcol = []
-		for meet_ref in meet_refs:
+		for meet_referee in meet_referees:
 			#ref = database.select('SELECT * FROM referee WHERE id=\'' + str(referee[2]) + '\'')
-			referee = self.dbm.get_referee(meet_ref[2])
-			self.ui.refColList.addItem(re.sub(r'\\', r'', referee[0][1]))
-			refcol.append(referee[0][0])
-		for referee in rows:
-			if referee[0] not in refcol:
-				self.ui.refList.addItem(re.sub(r'\\', r'', referee[1]))
+			#referee = self.dbm.get_referee(meet_ref[2])
+			self.ui.refColList.addItem(re.sub(r'\\', r'', meet_referee.fio))
+			refcol.append(meet_referee.id)
+		for referee in referees:
+			if referee.id not in refcol:
+				self.ui.refList.addItem(re.sub(r'\\', r'', referee.fio))
 		'''# TODO: Заполнить списки выборов спортсменов и участников'''
 		#meetmems = database.select('SELECT * FROM meetmembers WHERE meeting=\'' + str(self.meet[0]) + '\'')
 		meetmems = self.dbm.get_meet_members(self.meet[0])
@@ -388,10 +394,11 @@ class MeetingDialog(QDialog):
 			mem = database.select('SELECT id, fio FROM members WHERE id =\'' + str(member[2]) + '\'')
 			self.ui.membersList.addItem(re.sub(r'\\', r'', mem[0][1]))
 			memcol.append(mem[0][0])
-		row = database.select("SELECT * FROM members")
-		for member in row:
-			if member[0] not in memcol:
-				self.ui.athletesList.addItem(re.sub(r'\\', r'', member[1]))
+		#row = database.select("SELECT * FROM members")
+		members = self.dbm.get_all_members()
+		for member in members:
+			if member.id not in memcol:
+				self.ui.athletesList.addItem(re.sub(r'\\', r'', member.fio))
 
 		return
 

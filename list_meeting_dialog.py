@@ -427,7 +427,7 @@ class ListMeetingDialog(QDialog):
 			col += 1
 
 		meet = database.select('SELECT * FROM meeting WHERE id=\'' + str(items[0]) + '\'')
-		edit_meets = MeetingDialog(meet)
+		edit_meets = MeetingDialog(meet[0])
 		#edit_meets.edit_meet(meet[0])
 		edit_meets.exec_()
 

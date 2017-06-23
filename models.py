@@ -14,6 +14,7 @@ class Member():
         self.city = row[8]
         self.trainer = row[9]
 
+
 class Referee():
     def __init__(self, row):
         self.id = row[0]
@@ -34,3 +35,10 @@ class MeetMember():
         self.id = row[0]
         self.meeting_id = row[1]
         self.member_id = row[2]
+
+
+class MeetReferee():
+    def __init__(self, row):
+        self.id = row[0]
+        self.meeting_id = row[1]
+        self.referee_id = row[2]

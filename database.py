@@ -261,10 +261,21 @@ class Dbase():
 		self.conn = self.connect(self.path)
 		self.cursor = self.conn.cursor()
 		self.cursor.execute(select)
-		row = self.cursor.fetchall()
+		rows = self.cursor.fetchall()
+		self.cursor.close()
+
+		return rows
+
+	def select_one(self, select):
+
+		self.conn = self.connect(self.path)
+		self.cursor = self.conn.cursor()
+		self.cursor.execute(select)
+		row = self.cursor.fetchone()
 		self.cursor.close()
 
 		return row
+
 
 	def ins_upd(self, ins_upd):
 
