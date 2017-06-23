@@ -4,7 +4,7 @@ from record import RecordDialog
 from add_referee_dialog import AddRefereeDialog
 from list_referee_dialog import ListRefereeDialog
 from add_member_dialog import AddMemberDialog
-from create_meeting import CreateMeetingDialog
+from meeting_dialog import MeetingDialog
 from list_members_dialog import ListMemberDialog
 from list_meeting_dialog import ListMeetingDialog
 
@@ -49,7 +49,7 @@ class RightClickMenu(QtWidgets.QMenu):
 
 	def meeting(self):
 
-		game = CreateMeetingDialog()
+		game = MeetingDialog()
 		game.exec_()
 
 	def listmeeting(self):

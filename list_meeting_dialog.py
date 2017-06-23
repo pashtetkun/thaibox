@@ -4,7 +4,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog
 from list_meetings import Ui_Dialog as listmeeting
 from database import Dbase as db
-from create_meeting import CreateMeetingDialog
+from meeting_dialog import MeetingDialog
 import re
 import xlsxwriter
 import datetime
@@ -427,8 +427,8 @@ class ListMeetingDialog(QDialog):
 			col += 1
 
 		meet = database.select('SELECT * FROM meeting WHERE id=\'' + str(items[0]) + '\'')
-		edit_meets = CreateMeetingDialog(True)
-		edit_meets.edit_meet(meet[0])
+		edit_meets = MeetingDialog(meet)
+		#edit_meets.edit_meet(meet[0])
 		edit_meets.exec_()
 
 		'''# TODO: Получить новые данные'''

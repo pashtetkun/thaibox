@@ -174,7 +174,7 @@ class Dbase():
 		self.ins_upd("INSERT INTO ring (ring) VALUES (\"" + "Ринг А" + "\")")
 		self.ins_upd("INSERT INTO ring (ring) VALUES (\"" + "Ринг Б" + "\")")
 		# разряд
-		# Не забывать испралять нижший и высший разряд в алгоритме жеребьевки (create_meeting.py)
+		# Не забывать испралять нижший и высший разряд в алгоритме жеребьевки (meeting_dialog.py)
 		self.ins_upd("INSERT INTO category (category) VALUES (\"" + "5-й разряд" + "\")")
 		self.ins_upd("INSERT INTO category (category) VALUES (\"" + "4-й разряд" + "\")")
 		self.ins_upd("INSERT INTO category (category) VALUES (\"" + "3-й разряд" + "\")")
