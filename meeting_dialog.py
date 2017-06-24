@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QDialog
 from meet import Ui_Dialog as createmeeting
 from database import Dbase as db
 from database_manager import DbManager as dbmanager
+from models import Meeting
 from validator import Valid
 import re
 from input_error_slots import InputErrorSlots
@@ -51,9 +52,22 @@ class MeetingDialog(QDialog):
 		#
 		self.ring = 1
 		self.meeting = 0
-		self.meet = meet
+		#self.meet = meet
+		self.meet = None
+		if meet:
+			self.meet = Meeting(meet)
 
 		self.dbm = dbmanager()
+
+		self.members = []
+		self.referees = []
+		self.weight_categories = []
+		self.meet_referees = []
+		self.not_meet_referees = []
+		self.meet_members = []
+		self.not_meet_members = []
+
+		self.fill_data()
 
 		'''# TODO: сделать список выбора и заполнить его весовыми категориями'''
 		# TODO: при изменении списка выбора весовых категорий изменять значения списков спортсменов и участников
@@ -61,29 +75,69 @@ class MeetingDialog(QDialog):
 		# TODO: Сделать жеребьевку спортсменов согласно весовым категориям и текущей стадии соревнования (1/8, 1/4, полуфинал, финал)
 		# TODO: Сделать возможность указывать результат проведенных поединков для спорсмена (выйграл/проиграл)
 		# TODO: Сделать вывод жеребьевки согласно шаблону
+
+	#заполнить форму соревнования данными
+	def fill_data(self):
+		self.members = self.dbm.get_all_members()
+		self.referees = self.dbm.get_all_referees()
+		self.weight_categories = self.dbm.get_all_weight_categories()
+
+		for wcat in self.weight_categories:
+			self.ui.weightcatCBox.addItem(re.sub(r'\\', r'', wcat.name))
+
+		for referee in self.referees:
+			self.ui.mainrefCBox.addItem(re.sub(r'\\', r'', referee.fio))
+			self.ui.mainclerkCBox.addItem(re.sub(r'\\', r'', referee.fio))
+
+		refs_in_meet_ids = []
+		mems_in_meet_ids = []
 		if self.meet:
 			self.setWindowTitle("Изменение соревнования")
-			self.edit_meet()
+			self.id = self.meet.id
+			self.ui.nameEdit.setText(re.sub(r'\\', r'', self.meet.name))
+			self.ui.startDate.setDate(QtCore.QDate.fromString(self.meet.start_date, 'yyyy-MM-dd'))
+			self.ui.endDate.setDate(QtCore.QDate.fromString(self.meet.end_date, 'yyyy-MM-dd'))
+			self.ui.cityEdit.setText(re.sub(r'\\', r'', self.meet.city))
+			self.ui.meetCountEdit.setText(str(self.meet.meetcount))
+			'''# TODO: Установить главного судью и секретаря'''
+			main_referee = self.dbm.get_referee(self.meet.main_referee_id)
+			main_clerk = self.dbm.get_referee(self.meet.main_clerk_id)
+			'''# TODO: Заполнить списки выбора судей'''
+			self.ui.mainrefCBox.setCurrentIndex(self.ui.mainrefCBox.findText(main_referee.fio))
+			self.ui.mainclerkCBox.setCurrentIndex(self.ui.mainclerkCBox.findText(main_clerk.fio))
+			meet_refs = self.dbm.get_meet_refs(self.meet.id)
+			refs_in_meet_ids = [item.referee_id for item in meet_refs]
+
+			'''# TODO: Заполнить списки выборов спортсменов и участников'''
+			meetmems = self.dbm.get_meet_members(self.meet.id)
+			mems_in_meet_ids = [item.member_id for item in meetmems]
 
 		else:
 			self.setWindowTitle("Создание соревнования")
-
-			'''# TODO: Заполнить список спортсменов'''
-			members = self.dbm.get_all_members()
-			for member in members:
-				self.ui.athletesList.addItem(re.sub(r'\\', r'', member.fio))
-
-			referees = self.dbm.get_all_referees()
-			for referee in referees:
-				self.ui.mainrefCBox.addItem(re.sub(r'\\', r'', referee.fio))
-				self.ui.mainclerkCBox.addItem(re.sub(r'\\', r'', referee.fio))
-				self.ui.refList.addItem(re.sub(r'\\', r'', referee.fio))
-
-			weight_categories = self.dbm.get_all_weight_categories()
-			for wcat in weight_categories:
-				self.ui.weightcatCBox.addItem(re.sub(r'\\', r'', wcat.name))
-
 			self.ui.wsortitionButton.hide()
+
+		for referee in self.referees:
+			if referee.id in refs_in_meet_ids:
+				self.meet_referees.append(referee)
+			else:
+				self.not_meet_referees.append(referee)
+
+		for member in self.members:
+			if member.id in mems_in_meet_ids:
+				self.meet_members.append(member)
+			else:
+				self.not_meet_members.append(member)
+
+		for meet_referee in self.meet_referees:
+			self.ui.refColList.addItem(re.sub(r'\\', r'', meet_referee.fio))
+		for referee in self.not_meet_referees:
+			self.ui.refList.addItem(re.sub(r'\\', r'', referee.fio))
+		# TODO: Заполнить список спортсменов
+		for member in self.meet_members:
+			self.ui.membersList.addItem(re.sub(r'\\', r'', member.fio))
+		for member in self.not_meet_members:
+			self.ui.athletesList.addItem(re.sub(r'\\', r'', member.fio))
+
 
 	def update_sportsmenlists(self):
 
@@ -338,68 +392,3 @@ class MeetingDialog(QDialog):
 	def cancel_pressed(self):
 
 		self.close()
-
-	def edit_meet(self):
-
-		database = db()
-
-		# Заполнить список выбора весовых категорий
-		#row = database.select("SELECT * FROM weightcategory")
-		weight_categories = self.dbm.get_all_weight_categories()
-		for wcat in weight_categories:
-			self.ui.weightcatCBox.addItem(re.sub(r'\\', r'', wcat.name))
-
-		#row = database.select("SELECT * FROM referee")
-		referees = self.dbm.get_all_referees()
-		for referee in referees:
-			self.ui.mainrefCBox.addItem(re.sub(r'\\', r'', referee.fio))
-			self.ui.mainclerkCBox.addItem(re.sub(r'\\', r'', referee.fio))
-
-
-
-		self.id = self.meet[0]
-		self.ui.nameEdit.setText(re.sub(r'\\', r'', self.meet[1]))
-		self.ui.startDate.setDate(QtCore.QDate.fromString(self.meet[2], 'yyyy-MM-dd'))
-		self.ui.endDate.setDate(QtCore.QDate.fromString(self.meet[3], 'yyyy-MM-dd'))
-		self.ui.cityEdit.setText(re.sub(r'\\', r'', self.meet[4]))
-		self.ui.meetCountEdit.setText(str(self.meet[5]))
-		'''# TODO: Установить главного судью и секретаря'''
-		#mainref = database.select('SELECT fio FROM referee WHERE id=\'' + str(self.meet[6]) + '\'')
-		main_referee = self.dbm.get_referee(self.meet[6])
-		#mainclerk = database.select('SELECT fio FROM referee WHERE id=\'' + str(self.meet[7]) + '\'')
-		main_clerk = self.dbm.get_referee(self.meet[7])
-		'''# TODO: Заполнить списки выбора судей'''
-		self.ui.mainrefCBox.setCurrentIndex(self.ui.mainrefCBox.findText(main_referee.fio))
-		self.ui.mainclerkCBox.setCurrentIndex(self.ui.mainclerkCBox.findText(main_clerk.fio))
-		#meetref = database.select('SELECT * FROM meetreferees WHERE meeting=\'' + str(self.meet[0]) + '\'')
-		#meet_refs = self.dbm.get_meet_referees(self.meet[0])
-		#meet_referees = self.dbm.get_meet_referees2(self.meet[0])
-		meet_refs = self.dbm.get_meet_refs(self.meet[0])
-		refs_in_meet_ids = [item.referee_id for item in meet_refs]
-		meet_referees = [referee for referee in referees if referee.id in refs_in_meet_ids]
-		refcol = []
-		for meet_referee in meet_referees:
-			#ref = database.select('SELECT * FROM referee WHERE id=\'' + str(referee[2]) + '\'')
-			#referee = self.dbm.get_referee(meet_ref[2])
-			self.ui.refColList.addItem(re.sub(r'\\', r'', meet_referee.fio))
-			refcol.append(meet_referee.id)
-		for referee in referees:
-			if referee.id not in refcol:
-				self.ui.refList.addItem(re.sub(r'\\', r'', referee.fio))
-		'''# TODO: Заполнить списки выборов спортсменов и участников'''
-		#meetmems = database.select('SELECT * FROM meetmembers WHERE meeting=\'' + str(self.meet[0]) + '\'')
-		meetmems = self.dbm.get_meet_members(self.meet[0])
-		memcol = []
-		for member in meetmems:
-			mem = database.select('SELECT id, fio FROM members WHERE id =\'' + str(member[2]) + '\'')
-			self.ui.membersList.addItem(re.sub(r'\\', r'', mem[0][1]))
-			memcol.append(mem[0][0])
-		#row = database.select("SELECT * FROM members")
-		members = self.dbm.get_all_members()
-		for member in members:
-			if member.id not in memcol:
-				self.ui.athletesList.addItem(re.sub(r'\\', r'', member.fio))
-
-		return
-
-

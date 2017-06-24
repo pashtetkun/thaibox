@@ -48,5 +48,9 @@ class DbManager():
         row = self.database.select_one('SELECT * FROM referee WHERE id=\'' + str(id) + '\'')
         return Referee(row) if row else None
 
-    def get_meet_members(self, meeting):
-        return self.database.select('SELECT * FROM meetmembers WHERE meeting=\'' + str(meeting) + '\'')
+    def get_meet_members(self, meeting_id):
+        meet_mems = []
+        rows = self.database.select('SELECT * FROM meetmembers WHERE meeting=\'' + str(meeting_id) + '\'')
+        for row in rows:
+            meet_mems.append(MeetMember(row))
+        return meet_mems
