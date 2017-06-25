@@ -174,8 +174,14 @@ class MeetingDialog(QDialog):
 
 	def add_pressed(self):
 
-		if self.update:
+		if self.meet:
 			self.ui.wsortitionButton.setEnabled(False)
+
+		#
+		indx = self.ui.athletesList.currentIndex()
+		if indx != -1:
+			pass
+		#
 
 		count = self.ui.athletesList.count()
 		if count != 0:
@@ -190,7 +196,7 @@ class MeetingDialog(QDialog):
 
 	def remove_pressed(self):
 
-		if self.update:
+		if self.meet:
 			self.ui.wsortitionButton.setEnabled(False)
 
 		count = self.ui.membersList.count()
@@ -279,7 +285,7 @@ class MeetingDialog(QDialog):
 		''' проверить сколько элементов в списке, если больше или равно 3, то жеребьевка случайным образом взять два
 		элемента (удалить их из списка)'''
 		database = db()
-		if self.update:
+		if self.meet:
 			self.meeting = self.id
 
 		while len(list) > 0:
@@ -321,7 +327,7 @@ class MeetingDialog(QDialog):
 
 		'''# TODO: Если соревнование редактируется, то у далить старые данные'''
 		'''# TODO: проверить не редактируется ли соревнование, если да, то удалить старые данные сортировки'''
-		if self.update:
+		if self.meet:
 			database.delete('DELETE FROM meetmembers WHERE meeting=\'' + str(self.id) + '\'')
 			database.delete('DELETE FROM meetreferees WHERE meeting=\'' + str(self.id) + '\'')
 			database.delete('DELETE FROM sortition WHERE idmeet=\'' + str(self.id) + '\'')
@@ -349,7 +355,7 @@ class MeetingDialog(QDialog):
 		if self.ui.meetCountEdit.text() == '':
 			self.ui.meetCountEdit.setText(str(count))
 
-		if self.update:
+		if self.meet:
 			row = database.ins_upd('UPDATE meeting SET name=\'' + validator.escape(self.ui.nameEdit.text()) + '\', sdate=\'' + self.ui.startDate.date().toPyDate().strftime('%Y-%m-%d') + '\', edate=\'' + self.ui.endDate.date().toPyDate().strftime('%Y-%m-%d') + '\', city=\'' + validator.escape(self.ui.cityEdit.text()) + '\', meetcount=\'' + self.ui.meetCountEdit.text() + '\', mainreferee=\'' + str(mainref[0][0]) + '\', mainclerk=\'' + str(mainclerk[0][0]) + '\' WHERE id=\'' + str(self.id) + '\'')
 		else:
 			self.meeting = database.ins_upd('INSERT INTO meeting(name, sdate, edate, city, meetcount, mainreferee, mainclerk) VALUES (\'' + validator.escape(self.ui.nameEdit.text()) + '\', \'' + self.ui.startDate.date().toPyDate().strftime('%Y-%m-%d') + '\', \'' + self.ui.endDate.date().toPyDate().strftime('%Y-%m-%d') + '\', \'' + validator.escape(self.ui.cityEdit.text()) + '\', \'' + self.ui.meetCountEdit.text() + '\', \'' + str(mainref[0][0]) + '\', \'' + str(mainclerk[0][0]) + '\')')
