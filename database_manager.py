@@ -28,29 +28,28 @@ class DbManager():
             weight_categories.append(WeightCategory(row))
         return weight_categories
 
-    def get_meet_refs(self, meet_id):
-        meet_refs = []
-        rows = self.database.select('SELECT * FROM meetreferees WHERE meeting=\'' + str(meet_id) + '\'')
-        for row in rows:
-            meet_refs.append(MeetReferee(row))
-        return meet_refs
-
-    '''
-    def get_meet_referees2(self, meet_id):
+    def get_meet_referees(self, meet_id):
         referees = []
-        rows = self.database.select('SELECT r.* FROM meetreferees mr INNER JOIN referee r ON mr.members = r.id WHERE mr.meeting=\'' + str(meet_id) + '\'')
+        sql = """SELECT r.*
+                 FROM referee r INNER JOIN meetreferees mr 
+                 ON r.id = mr.referee 
+                 WHERE mr.meeting=%d""" % meet_id
+        rows = self.database.select(sql)
         for row in rows:
             referees.append(Referee(row))
         return referees
-    '''
 
     def get_referee(self, id):
         row = self.database.select_one('SELECT * FROM referee WHERE id=\'' + str(id) + '\'')
         return Referee(row) if row else None
 
     def get_meet_members(self, meeting_id):
-        meet_mems = []
-        rows = self.database.select('SELECT * FROM meetmembers WHERE meeting=\'' + str(meeting_id) + '\'')
+        members = []
+        sql = """SELECT m.*
+                 FROM members m INNER JOIN meetmembers mm
+                         ON m.id = mm.members
+                         WHERE mm.meeting=%d""" % meeting_id
+        rows = self.database.select(sql)
         for row in rows:
-            meet_mems.append(MeetMember(row))
-        return meet_mems
+            members.append(Member(row))
+        return members

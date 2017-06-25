@@ -37,6 +37,7 @@ class MeetingDialog(QDialog):
 	def __init__(self, meet = []):
 
 		super(MeetingDialog, self).__init__()
+		self.initialize = False
 		self.id = 0
 		self.ui = CreateMeetingSlots()
 		self.ui.setupUi(self)
@@ -69,6 +70,12 @@ class MeetingDialog(QDialog):
 
 		self.fill_data()
 
+		self.initialize = True
+
+		self.ui.weightcatCBox.setCurrentIndex(-1)
+		self.ui.weightcatCBox.setCurrentIndex(0)
+
+
 		'''# TODO: сделать список выбора и заполнить его весовыми категориями'''
 		# TODO: при изменении списка выбора весовых категорий изменять значения списков спортсменов и участников
 		# TODO: заносить участников в базу данных согласно выбранной весовой категории, если соревнование уже началось, в списке участников отмечать проигравших спортсменов как неактивные (нельзя удалить)
@@ -83,21 +90,20 @@ class MeetingDialog(QDialog):
 		self.weight_categories = self.dbm.get_all_weight_categories()
 
 		for wcat in self.weight_categories:
-			self.ui.weightcatCBox.addItem(re.sub(r'\\', r'', wcat.name))
-
+			self.ui.weightcatCBox.addItem(wcat.name.replace('\\', ''))
 		for referee in self.referees:
-			self.ui.mainrefCBox.addItem(re.sub(r'\\', r'', referee.fio))
-			self.ui.mainclerkCBox.addItem(re.sub(r'\\', r'', referee.fio))
+			self.ui.mainrefCBox.addItem(referee.fio.replace('\\', ''))
+			self.ui.mainclerkCBox.addItem(referee.fio.replace('\\', ''))
 
 		refs_in_meet_ids = []
 		mems_in_meet_ids = []
 		if self.meet:
 			self.setWindowTitle("Изменение соревнования")
 			self.id = self.meet.id
-			self.ui.nameEdit.setText(re.sub(r'\\', r'', self.meet.name))
+			self.ui.nameEdit.setText(self.meet.name.replace('\\',''))
 			self.ui.startDate.setDate(QtCore.QDate.fromString(self.meet.start_date, 'yyyy-MM-dd'))
 			self.ui.endDate.setDate(QtCore.QDate.fromString(self.meet.end_date, 'yyyy-MM-dd'))
-			self.ui.cityEdit.setText(re.sub(r'\\', r'', self.meet.city))
+			self.ui.cityEdit.setText(self.meet.city.replace('\\',''))
 			self.ui.meetCountEdit.setText(str(self.meet.meetcount))
 			'''# TODO: Установить главного судью и секретаря'''
 			main_referee = self.dbm.get_referee(self.meet.main_referee_id)
@@ -105,45 +111,55 @@ class MeetingDialog(QDialog):
 			'''# TODO: Заполнить списки выбора судей'''
 			self.ui.mainrefCBox.setCurrentIndex(self.ui.mainrefCBox.findText(main_referee.fio))
 			self.ui.mainclerkCBox.setCurrentIndex(self.ui.mainclerkCBox.findText(main_clerk.fio))
-			meet_refs = self.dbm.get_meet_refs(self.meet.id)
-			refs_in_meet_ids = [item.referee_id for item in meet_refs]
+
+			self.meet_referees = self.dbm.get_meet_referees(self.meet.id)
+			refs_in_meet_ids = [referee.id for referee in self.meet_referees]
 
 			'''# TODO: Заполнить списки выборов спортсменов и участников'''
-			meetmems = self.dbm.get_meet_members(self.meet.id)
-			mems_in_meet_ids = [item.member_id for item in meetmems]
+			self.meet_members = self.dbm.get_meet_members(self.meet.id)
+			mems_in_meet_ids = [member.id for member in self.meet_members]
 
 		else:
 			self.setWindowTitle("Создание соревнования")
 			self.ui.wsortitionButton.hide()
 
 		for referee in self.referees:
-			if referee.id in refs_in_meet_ids:
-				self.meet_referees.append(referee)
-			else:
+			if referee.id not in refs_in_meet_ids:
 				self.not_meet_referees.append(referee)
 
 		for member in self.members:
-			if member.id in mems_in_meet_ids:
-				self.meet_members.append(member)
-			else:
+			if member.id not in mems_in_meet_ids:
 				self.not_meet_members.append(member)
 
 		for meet_referee in self.meet_referees:
-			self.ui.refColList.addItem(re.sub(r'\\', r'', meet_referee.fio))
+			self.ui.refColList.addItem(meet_referee.fio.replace('\\',''))
 		for referee in self.not_meet_referees:
-			self.ui.refList.addItem(re.sub(r'\\', r'', referee.fio))
+			self.ui.refList.addItem(referee.fio.replace('\\',''))
 		# TODO: Заполнить список спортсменов
-		for member in self.meet_members:
-			self.ui.membersList.addItem(re.sub(r'\\', r'', member.fio))
-		for member in self.not_meet_members:
-			self.ui.athletesList.addItem(re.sub(r'\\', r'', member.fio))
 
+	#обновить листбокс спортсменов
+	def refresh_athletes_list(self, weight_category):
+		self.ui.athletesList.clear()
+		for member in self.not_meet_members:
+			if member.weight_id == weight_category.id:
+				self.ui.athletesList.addItem(member.fio.replace('\\', ''))
+
+	#обновить листбокс участников
+	def refresh_members_list(self, weight_category):
+		self.ui.membersList.clear()
+		for member in self.meet_members:
+			if member.weight_id == weight_category.id:
+				self.ui.membersList.addItem(member.fio.replace('\\', ''))
 
 	def update_sportsmenlists(self):
+		indx = self.ui.weightcatCBox.currentIndex()
+		if not self.initialize or indx == -1:
+			return
 
-		print(self.ui.weightcatCBox.currentIndex())
-
-		return
+		print(indx)
+		wcat = self.weight_categories[indx]
+		self.refresh_athletes_list(wcat)
+		self.refresh_members_list(wcat)
 
 	def valid(self, res):
 
