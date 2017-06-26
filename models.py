@@ -31,15 +31,16 @@ class WeightCategory():
 
 
 class Meeting():
-    def __init__(self, row):
-        self.id = row[0]
-        self.name = row[1]
-        self.start_date = row[2]
-        self.end_date = row[3]
-        self.city = row[4]
-        self.meetcount = row[5]
-        self.main_referee_id = row[6]
-        self.main_clerk_id = row[7]
+    def __init__(self, row=[]):
+        if row:
+            self.id = row[0]
+            self.name = row[1]
+            self.start_date = row[2]
+            self.end_date = row[3]
+            self.city = row[4]
+            self.meetcount = row[5]
+            self.main_referee_id = row[6]
+            self.main_clerk_id = row[7]
 
 
 class MeetMember():

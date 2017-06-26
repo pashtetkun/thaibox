@@ -53,3 +53,11 @@ class DbManager():
         for row in rows:
             members.append(Member(row))
         return members
+
+    def insert_or_update_meeting(self, meeting):
+        #sql = """UPDATE meeting
+        #         SET name=%s, sdate=%s, edate=%s, city=%s, meetcount=%s, mainreferee=%d, mainclerk=%d
+        #         WHERE id=%d""" % (meeting.name, meeting.start_date, meeting.end_date, meeting.city, meeting.meetcount,
+        #                           meeting.main_referee_id, meeting.main_clerk_id, meeting.id)
+        sql = "UPDATE meeting SET name=?, sdate=?, edate=?, city=?, meetcount=?, mainreferee=?, mainclerk=? WHERE id=?", (meeting.name, meeting.start_date, meeting.end_date, meeting.city, meeting.meetcount, meeting.main_referee_id, meeting.main_clerk_id, meeting.id)
+        self.database.ins_upd(sql)

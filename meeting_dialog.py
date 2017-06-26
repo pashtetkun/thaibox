@@ -50,6 +50,8 @@ class MeetingDialog(QDialog):
 		self.ui.sortitionButton.clicked.connect(self.sortition_pressed)
 		self.ui.cancel.clicked.connect(self.cancel_pressed)
 		self.ui.weightcatCBox.currentIndexChanged.connect(self.weight_category_changed)
+		self.ui.mainrefCBox.currentIndexChanged.connect(self.main_referee_changed)
+		self.ui.mainclerkCBox.currentIndexChanged.connect(self.main_clerk_changed)
 		#
 		self.ring = 1
 		self.meeting = 0
@@ -68,6 +70,8 @@ class MeetingDialog(QDialog):
 		self.meet_members = []
 		self.not_meet_members = []
 		self.current_weight_category = None
+		self.main_referee = None
+		self.main_clerk = None
 
 		self.fill_data()
 
@@ -105,11 +109,11 @@ class MeetingDialog(QDialog):
 			self.ui.cityEdit.setText(self.meet.city.replace('\\',''))
 			self.ui.meetCountEdit.setText(str(self.meet.meetcount))
 			'''# TODO: Установить главного судью и секретаря'''
-			main_referee = self.dbm.get_referee(self.meet.main_referee_id)
-			main_clerk = self.dbm.get_referee(self.meet.main_clerk_id)
+			self.main_referee = self.dbm.get_referee(self.meet.main_referee_id)
+			self.main_clerk = self.dbm.get_referee(self.meet.main_clerk_id)
 			'''# TODO: Заполнить списки выбора судей'''
-			self.ui.mainrefCBox.setCurrentIndex(self.ui.mainrefCBox.findText(main_referee.fio))
-			self.ui.mainclerkCBox.setCurrentIndex(self.ui.mainclerkCBox.findText(main_clerk.fio))
+			self.ui.mainrefCBox.setCurrentIndex(self.ui.mainrefCBox.findText(self.main_referee.fio))
+			self.ui.mainclerkCBox.setCurrentIndex(self.ui.mainclerkCBox.findText(self.main_clerk.fio))
 
 			self.meet_referees = self.dbm.get_meet_referees(self.meet.id)
 			self.meet_referees.sort(key=operator.attrgetter("fio"), reverse=False)
@@ -181,6 +185,15 @@ class MeetingDialog(QDialog):
 		
 		self.refresh_athletes_list()
 		self.refresh_members_list()
+
+	def main_referee_changed(self):
+		indx = self.ui.mainrefCBox.currentIndex()
+		self.main_referee = self.referees[indx]
+
+
+	def main_clerk_changed(self):
+		indx = self.ui.mainclerkCBox.currentIndex()
+		self.main_clerk = self.referees[indx]
 
 	#обновить список судей
 	def refresh_referees_list(self):
@@ -274,22 +287,41 @@ class MeetingDialog(QDialog):
 
 	#	pass
 
+	def get_meeting_values(self):
+		if not self.meet:
+			self.meet = Meeting()
+		validator = Valid()
+		self.meet.main_referee_id = self.main_referee.id
+		self.meet.main_clerk_id = self.main_clerk.id
+		self.meet.name = validator.escape(self.ui.nameEdit.text())
+		self.meet.start_date = self.ui.startDate.date().toPyDate().strftime('%Y-%m-%d')
+		self.meet.end_date = self.ui.endDate.date().toPyDate().strftime('%Y-%m-%d')
+		self.meet.city = validator.escape(self.ui.cityEdit.text())
+		self.meet.meetcount = self.ui.meetCountEdit.text()
+		self.meet.main_referee_id = self.main_referee.id
+		self.meet.main_clerk_id = self.main_clerk.id
+		return self.meet
+
 	def wsortition_pressed(self):
 
 		database = db()
 		validator = Valid()
 		print(self.id)
 
-		count = self.ui.membersList.count()
+		#count = self.ui.membersList.count()
+		count = len(self.meet_members)
 		#TODO: Если self.ui.meetCountEdit.text() пустое то установить его по количеству участников (боев будет не больше чем если каждый участник один выйдет на ринг)
 
 		if self.ui.meetCountEdit.text() == '':
 			self.ui.meetCountEdit.setText(str(count))
 
 		'''# TODO: Изменить данные по соревнованию, главного судью и главного секретаря'''
-		mainref = database.select('SELECT id FROM referee WHERE fio=\'' + self.ui.mainrefCBox.itemText(self.ui.mainrefCBox.currentIndex()) + '\'')
-		mainclerk = database.select('SELECT id FROM referee WHERE fio=\'' + self.ui.mainclerkCBox.itemText(self.ui.mainclerkCBox.currentIndex()) + '\'')
-		row = database.ins_upd('UPDATE meeting SET name=\'' + validator.escape(self.ui.nameEdit.text()) + '\', sdate=\'' + self.ui.startDate.date().toPyDate().strftime('%Y-%m-%d') + '\', edate=\'' + self.ui.endDate.date().toPyDate().strftime('%Y-%m-%d') + '\', city=\'' + validator.escape(self.ui.cityEdit.text()) + '\', meetcount=\'' + self.ui.meetCountEdit.text() + '\', mainreferee=\'' + str(mainref[0][0]) + '\', mainclerk=\'' + str(mainclerk[0][0]) + '\' WHERE id=\'' + str(self.id) + '\'')
+		#mainref = database.select('SELECT id FROM referee WHERE fio=\'' + self.ui.mainrefCBox.itemText(self.ui.mainrefCBox.currentIndex()) + '\'')
+		#mainclerk = database.select('SELECT id FROM referee WHERE fio=\'' + self.ui.mainclerkCBox.itemText(self.ui.mainclerkCBox.currentIndex()) + '\'')
+		self.meet = self.get_meeting_values()
+		#row = database.ins_upd('UPDATE meeting SET name=\'' + validator.escape(self.ui.nameEdit.text()) + '\', sdate=\'' + self.ui.startDate.date().toPyDate().strftime('%Y-%m-%d') + '\', edate=\'' + self.ui.endDate.date().toPyDate().strftime('%Y-%m-%d') + '\', city=\'' + validator.escape(self.ui.cityEdit.text()) + '\', meetcount=\'' + self.ui.meetCountEdit.text() + '\', mainreferee=\'' + str(mainref[0][0]) + '\', mainclerk=\'' + str(mainclerk[0][0]) + '\' WHERE id=\'' + str(self.id) + '\'')
+		#self.dbm.insert_or_update_meeting(self.meet)
+		self.dbm.insert_or_update_meeting(self.meet)
 
 		'''# TODO: Очистить таблицу судей от старых данных по текущему соревнованию'''
 		database.delete('DELETE FROM meetreferees WHERE meeting=\'' + str(self.id) + '\'')
