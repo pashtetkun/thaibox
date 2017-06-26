@@ -141,6 +141,7 @@ class MeetingDialog(QDialog):
 	#заполнить комбобоксы
 	def fill_comboboxes(self):
 		self.ui.weightcatCBox.clear()
+		self.ui.weightcatCBox.addItem("Все категории")
 		for wcat in self.weight_categories:
 			self.ui.weightcatCBox.addItem(wcat.name.replace('\\', ''))
 
@@ -155,7 +156,7 @@ class MeetingDialog(QDialog):
 	def refresh_athletes_list(self):
 		self.ui.athletesList.clear()
 		for member in self.not_meet_members:
-			if self.current_weight_category and member.weight_id == self.current_weight_category.id:
+			if not self.current_weight_category or (self.current_weight_category and member.weight_id == self.current_weight_category.id):
 				item = QListWidgetItem(member.fio.replace('\\', ''))
 				item.setData(QtCore.Qt.UserRole, member)
 				self.ui.athletesList.addItem(item)
@@ -164,7 +165,7 @@ class MeetingDialog(QDialog):
 	def refresh_members_list(self):
 		self.ui.membersList.clear()
 		for member in self.meet_members:
-			if self.current_weight_category and member.weight_id == self.current_weight_category.id:
+			if not self.current_weight_category or (self.current_weight_category and member.weight_id == self.current_weight_category.id):
 				item = QListWidgetItem(member.fio.replace('\\', ''))
 				item.setData(QtCore.Qt.UserRole, member)
 				self.ui.membersList.addItem(item)
@@ -176,8 +177,8 @@ class MeetingDialog(QDialog):
 			return
 
 		print(indx)
-		wcat = self.weight_categories[indx]
-		self.current_weight_category = wcat
+		self.current_weight_category = None if indx == 0 else self.weight_categories[indx-1]
+		
 		self.refresh_athletes_list()
 		self.refresh_members_list()
 
