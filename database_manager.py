@@ -23,7 +23,7 @@ class DbManager():
 
     def get_all_weight_categories(self):
         weight_categories = []
-        rows = self.database.select("SELECT * FROM weightcategory WHERE wcategory !='' ORDER BY wcategory")
+        rows = self.database.select("SELECT * FROM weightcategory WHERE wcategory != '' ORDER BY wcategory")
         for row in rows:
             weight_categories.append(WeightCategory(row))
         return weight_categories
@@ -40,7 +40,7 @@ class DbManager():
         return referees
 
     def get_referee(self, id):
-        row = self.database.select_one('SELECT * FROM referee WHERE id=\'' + str(id) + '\'')
+        row = self.database.select_one('SELECT * FROM referee WHERE id=%d' % id)
         return Referee(row) if row else None
 
     def get_meet_members(self, meeting_id):
