@@ -23,7 +23,7 @@ class DbManager():
 
     def get_all_weight_categories(self):
         weight_categories = []
-        rows = self.database.select("SELECT * FROM weightcategory")
+        rows = self.database.select("SELECT * FROM weightcategory WHERE wcategory !='' ORDER BY wcategory")
         for row in rows:
             weight_categories.append(WeightCategory(row))
         return weight_categories

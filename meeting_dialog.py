@@ -1,5 +1,5 @@
-from PyQt5 import QtCore
-from PyQt5.QtWidgets import QDialog
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtWidgets import QDialog, QListWidgetItem
 from meet import Ui_Dialog as createmeeting
 from database import Dbase as db
 from database_manager import DbManager as dbmanager
@@ -8,6 +8,7 @@ from validator import Valid
 import re
 from input_error_slots import InputErrorSlots
 import random
+import operator
 
 
 class InputError(QDialog):
@@ -49,7 +50,7 @@ class MeetingDialog(QDialog):
 		self.ui.wsortitionButton.clicked.connect(self.wsortition_pressed)
 		self.ui.sortitionButton.clicked.connect(self.sortition_pressed)
 		self.ui.cancel.clicked.connect(self.cancel_pressed)
-		self.ui.weightcatCBox.currentIndexChanged.connect(self.update_sportsmenlists)
+		self.ui.weightcatCBox.currentIndexChanged.connect(self.weight_category_changed)
 		#
 		self.ring = 1
 		self.meeting = 0
@@ -67,6 +68,7 @@ class MeetingDialog(QDialog):
 		self.not_meet_referees = []
 		self.meet_members = []
 		self.not_meet_members = []
+		self.current_weight_category = None
 
 		self.fill_data()
 
@@ -86,7 +88,9 @@ class MeetingDialog(QDialog):
 	#заполнить форму соревнования данными
 	def fill_data(self):
 		self.members = self.dbm.get_all_members()
+		self.members.sort(key=operator.attrgetter("fio"), reverse=False)
 		self.referees = self.dbm.get_all_referees()
+		self.referees.sort(key=operator.attrgetter("fio"), reverse=False)
 		self.weight_categories = self.dbm.get_all_weight_categories()
 
 		for wcat in self.weight_categories:
@@ -113,10 +117,12 @@ class MeetingDialog(QDialog):
 			self.ui.mainclerkCBox.setCurrentIndex(self.ui.mainclerkCBox.findText(main_clerk.fio))
 
 			self.meet_referees = self.dbm.get_meet_referees(self.meet.id)
+			self.meet_referees.sort(key=operator.attrgetter("fio"), reverse=False)
 			refs_in_meet_ids = [referee.id for referee in self.meet_referees]
 
 			'''# TODO: Заполнить списки выборов спортсменов и участников'''
 			self.meet_members = self.dbm.get_meet_members(self.meet.id)
+			self.meet_members.sort(key=operator.attrgetter("fio"), reverse=False)
 			mems_in_meet_ids = [member.id for member in self.meet_members]
 
 		else:
@@ -126,40 +132,62 @@ class MeetingDialog(QDialog):
 		for referee in self.referees:
 			if referee.id not in refs_in_meet_ids:
 				self.not_meet_referees.append(referee)
+		self.not_meet_referees.sort(key=operator.attrgetter("fio"), reverse=False)
 
 		for member in self.members:
 			if member.id not in mems_in_meet_ids:
 				self.not_meet_members.append(member)
+		self.not_meet_members.sort(key=operator.attrgetter("fio"), reverse=False)
 
-		for meet_referee in self.meet_referees:
-			self.ui.refColList.addItem(meet_referee.fio.replace('\\',''))
-		for referee in self.not_meet_referees:
-			self.ui.refList.addItem(referee.fio.replace('\\',''))
+		self.refresh_referees_list()
+		self.refresh_colreferees_list()
 		# TODO: Заполнить список спортсменов
 
 	#обновить листбокс спортсменов
-	def refresh_athletes_list(self, weight_category):
+	def refresh_athletes_list(self):
 		self.ui.athletesList.clear()
 		for member in self.not_meet_members:
-			if member.weight_id == weight_category.id:
-				self.ui.athletesList.addItem(member.fio.replace('\\', ''))
+			if self.current_weight_category and member.weight_id == self.current_weight_category.id:
+				item = QListWidgetItem(member.fio.replace('\\', ''))
+				item.setData(QtCore.Qt.UserRole, member)
+				self.ui.athletesList.addItem(item)
 
 	#обновить листбокс участников
-	def refresh_members_list(self, weight_category):
+	def refresh_members_list(self):
 		self.ui.membersList.clear()
 		for member in self.meet_members:
-			if member.weight_id == weight_category.id:
-				self.ui.membersList.addItem(member.fio.replace('\\', ''))
+			if self.current_weight_category and member.weight_id == self.current_weight_category.id:
+				item = QListWidgetItem(member.fio.replace('\\', ''))
+				item.setData(QtCore.Qt.UserRole, member)
+				self.ui.membersList.addItem(item)
 
-	def update_sportsmenlists(self):
+	def weight_category_changed(self):
 		indx = self.ui.weightcatCBox.currentIndex()
 		if not self.initialize or indx == -1:
+			self.current_weight_category = None
 			return
 
 		print(indx)
 		wcat = self.weight_categories[indx]
-		self.refresh_athletes_list(wcat)
-		self.refresh_members_list(wcat)
+		self.current_weight_category = wcat
+		self.refresh_athletes_list()
+		self.refresh_members_list()
+
+	#обновить список судей
+	def refresh_referees_list(self):
+		self.ui.refList.clear()
+		for referee in self.not_meet_referees:
+			item = QListWidgetItem(referee.fio.replace('\\', ''))
+			item.setData(QtCore.Qt.UserRole, referee)
+			self.ui.refList.addItem(item)
+
+	#обновить коллегию судей
+	def refresh_colreferees_list(self):
+		self.ui.refColList.clear()
+		for meet_referee in self.meet_referees:
+			item = QListWidgetItem(meet_referee.fio.replace('\\', ''))
+			item.setData(QtCore.Qt.UserRole, meet_referee)
+			self.ui.refColList.addItem(item)
 
 	def valid(self, res):
 
@@ -177,61 +205,73 @@ class MeetingDialog(QDialog):
 		if self.meet:
 			self.ui.wsortitionButton.setEnabled(False)
 
-		#
-		indx = self.ui.athletesList.currentIndex()
-		if indx != -1:
-			pass
-		#
-
-		count = self.ui.athletesList.count()
-		if count != 0:
-			try:
-				athname = self.ui.athletesList.currentItem().text()
-				self.ui.membersList.addItem(athname)
-				self.ui.athletesList.takeItem(self.ui.athletesList.row(self.ui.athletesList.currentItem()))
-			except:
-				pass
-
-		return
+		#athname = self.ui.athletesList.currentItem().text()
+		item = self.ui.athletesList.currentItem()
+		if not item:
+			return
+		member = item.data(QtCore.Qt.UserRole)
+		#member = next((m for m in self.not_meet_members if m.id == member_id), None)
+		self.not_meet_members.remove(member)
+		self.not_meet_members.sort(key=operator.attrgetter("fio"), reverse=False)
+		self.meet_members.append(member)
+		self.meet_members.sort(key=operator.attrgetter("fio"), reverse=False)
+		self.refresh_members_list()
+		self.refresh_athletes_list()
+		#self.ui.membersList.addItem(athname)
+		#self.ui.athletesList.takeItem(self.ui.athletesList.row(self.ui.athletesList.currentItem()))
 
 	def remove_pressed(self):
 
 		if self.meet:
 			self.ui.wsortitionButton.setEnabled(False)
 
-		count = self.ui.membersList.count()
-		if count != 0:
-			try:
-				memname = self.ui.membersList.currentItem().text()
-				self.ui.athletesList.addItem(memname)
-				self.ui.membersList.takeItem(self.ui.membersList.row(self.ui.membersList.currentItem()))
-			except:
-				pass
-		return
+		#memname = self.ui.membersList.currentItem().text()
+		item = self.ui.membersList.currentItem()
+		if not item:
+			return
+		member = item.data(QtCore.Qt.UserRole)
+		self.meet_members.remove(member)
+		self.meet_members.sort(key=operator.attrgetter("fio"), reverse=False)
+		self.not_meet_members.append(member)
+		self.not_meet_members.sort(key=operator.attrgetter("fio"), reverse=False)
+		self.refresh_members_list()
+		self.refresh_athletes_list()
+		#self.ui.athletesList.addItem(memname)
+		#self.ui.membersList.takeItem(self.ui.membersList.row(self.ui.membersList.currentItem()))
 
 	def radd_pressed(self):
 
-		count = self.ui.refList.count()
-		if count != 0:
-			try:
-				refname = self.ui.refList.currentItem().text()
-				self.ui.refColList.addItem(refname)
-				self.ui.refList.takeItem(self.ui.refList.row(self.ui.refList.currentItem()))
-			except:
-				pass
-		return
+		item =  self.ui.refList.currentItem()
+		if not item:
+			return
+		referee = item.data(QtCore.Qt.UserRole)
+		# member = next((m for m in self.not_meet_members if m.id == member_id), None)
+		self.not_meet_referees
+		self.not_meet_referees.sort(key=operator.attrgetter("fio"), reverse=False)
+		self.meet_referees.append(referee)
+		self.meet_referees.sort(key=operator.attrgetter("fio"), reverse=False)
+		self.refresh_referees_list()
+		self.refresh_colreferees_list()
+		#refname = self.ui.refList.currentItem().text()
+		#self.ui.refColList.addItem(refname)
+		#self.ui.refList.takeItem(self.ui.refList.row(self.ui.refList.currentItem()))
 
 	def rremove_pressed(self):
 
-		count = self.ui.refColList.count()
-		if count != 0:
-			try:
-				refcolname = self.ui.refColList.currentItem().text()
-				self.ui.refList.addItem(refcolname)
-				self.ui.refColList.takeItem(self.ui.refColList.row(self.ui.refColList.currentItem()))
-			except:
-				pass
-		return
+		item = self.ui.refColList.currentItem()
+		if not item:
+			return
+		referee = item.data(QtCore.Qt.UserRole)
+		self.meet_referees.remove(referee)
+		self.meet_referees.sort(key=operator.attrgetter("fio"), reverse=False)
+		self.not_meet_referees.append(referee)
+		self.not_meet_referees.sort(key=operator.attrgetter("fio"), reverse=False)
+		self.refresh_referees_list()
+		self.refresh_colreferees_list()
+		#refcolname = self.ui.refColList.currentItem().text()
+		#self.ui.refList.addItem(refcolname)
+		#self.ui.refColList.takeItem(self.ui.refColList.row(self.ui.refColList.currentItem()))
+
 
 	# def refshed_pressed(self):
 
