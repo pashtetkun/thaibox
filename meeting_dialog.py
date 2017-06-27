@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QDialog, QListWidgetItem
 from meet import Ui_Dialog as createmeeting
 from database import Dbase as db
 from database_manager import DbManager as dbmanager
-from models import Meeting
+from models import Meeting, MeetReferee
 from validator import Valid
 from input_error_slots import InputErrorSlots
 import random
@@ -304,11 +304,8 @@ class MeetingDialog(QDialog):
 
 	def wsortition_pressed(self):
 
-		database = db()
-		validator = Valid()
 		print(self.id)
 
-		#count = self.ui.membersList.count()
 		count = len(self.meet_members)
 		#TODO: Если self.ui.meetCountEdit.text() пустое то установить его по количеству участников (боев будет не больше чем если каждый участник один выйдет на ринг)
 
@@ -316,22 +313,18 @@ class MeetingDialog(QDialog):
 			self.ui.meetCountEdit.setText(str(count))
 
 		'''# TODO: Изменить данные по соревнованию, главного судью и главного секретаря'''
-		#mainref = database.select('SELECT id FROM referee WHERE fio=\'' + self.ui.mainrefCBox.itemText(self.ui.mainrefCBox.currentIndex()) + '\'')
-		#mainclerk = database.select('SELECT id FROM referee WHERE fio=\'' + self.ui.mainclerkCBox.itemText(self.ui.mainclerkCBox.currentIndex()) + '\'')
 		self.meet = self.get_meeting_values()
-		#row = database.ins_upd('UPDATE meeting SET name=\'' + validator.escape(self.ui.nameEdit.text()) + '\', sdate=\'' + self.ui.startDate.date().toPyDate().strftime('%Y-%m-%d') + '\', edate=\'' + self.ui.endDate.date().toPyDate().strftime('%Y-%m-%d') + '\', city=\'' + validator.escape(self.ui.cityEdit.text()) + '\', meetcount=\'' + self.ui.meetCountEdit.text() + '\', mainreferee=\'' + str(mainref[0][0]) + '\', mainclerk=\'' + str(mainclerk[0][0]) + '\' WHERE id=\'' + str(self.id) + '\'')
-		#self.dbm.insert_or_update_meeting(self.meet)
-		self.dbm.insert_or_update_meeting(self.meet)
+		self.dbm.update_meeting(self.meet)
 
 		'''# TODO: Очистить таблицу судей от старых данных по текущему соревнованию'''
-		database.delete('DELETE FROM meetreferees WHERE meeting=\'' + str(self.id) + '\'')
-		count = self.ui.refColList.count()
-		i = 0
-		while i < count:
-			ref = database.select('SELECT id FROM referee WHERE fio=\'' + self.ui.refColList.item(i).text() + '\'')
-			database.ins_upd('INSERT INTO meetreferees(meeting, referee) VALUES (\'' + str(self.id) + '\', \'' + str(
-				ref[0][0]) + '\')')
-			i += 1
+		self.dbm.delete_meet_referees(self.meet.id)
+		count = len(self.meet_referees)
+		
+		for referee in self.meet_referees:
+			meet_referee = MeetReferee()
+			meet_referee.meeting_id = self.meet.id
+			meet_referee.referee_id = referee.id
+			self.dbm.insert_meet_referee(meet_referee)
 
 		self.close()
 

@@ -51,7 +51,8 @@ class MeetMember():
 
 
 class MeetReferee():
-    def __init__(self, row):
-        self.id = row[0]
-        self.meeting_id = row[1]
-        self.referee_id = row[2]
+    def __init__(self, row=[]):
+        if row:
+            self.id = row[0]
+            self.meeting_id = row[1]
+            self.referee_id = row[2]

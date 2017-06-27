@@ -256,34 +256,37 @@ class Dbase():
 
 		return sqlite3.connect(path)
 
-	def select(self, select):
+	def select(self, select, params=None):
 
 		self.conn = self.connect(self.path)
 		self.cursor = self.conn.cursor()
-		self.cursor.execute(select)
+		if params:
+			self.cursor.execute(select, params)
+		else:
+			self.cursor.execute(select)
 		rows = self.cursor.fetchall()
 		self.cursor.close()
 
 		return rows
 
-	def select_one(self, select):
+	def select_one(self, select, params=None):
 
 		self.conn = self.connect(self.path)
 		self.cursor = self.conn.cursor()
-		self.cursor.execute(select)
+		self.cursor.execute(select, params)
 		row = self.cursor.fetchone()
 		self.cursor.close()
 
 		return row
 
 
-	def ins_upd(self, ins_upd):
+	def ins_upd(self, ins_upd, params=None):
 
 		lastid_row = 0
 		# Insert or update record into base
 		self.conn = self.connect(self.path)
 		self.cursor = self.conn.cursor()
-		self.cursor.execute(ins_upd)
+		self.cursor.execute(ins_upd, params)
 		lastid_row = self.cursor.lastrowid
 		self.conn.commit()
 
@@ -291,10 +294,10 @@ class Dbase():
 
 		return lastid_row
 
-	def delete(self, delete):
+	def delete(self, delete, params=None):
 
 		self.conn = self.connect(self.path)
 		self.cursor = self.conn.cursor()
-		self.cursor.execute(delete)
+		self.cursor.execute(delete, params)
 		self.conn.commit()
 

@@ -33,31 +33,44 @@ class DbManager():
         sql = """SELECT r.*
                  FROM referee r INNER JOIN meetreferees mr 
                  ON r.id = mr.referee 
-                 WHERE mr.meeting=%d""" % meet_id
-        rows = self.database.select(sql)
+                 WHERE mr.meeting=?"""
+        params = (meet_id,)
+        rows = self.database.select(sql, params)
         for row in rows:
             referees.append(Referee(row))
         return referees
 
     def get_referee(self, id):
-        row = self.database.select_one('SELECT * FROM referee WHERE id=%d' % id)
+        row = self.database.select_one('SELECT * FROM referee WHERE id=?', (id,))
         return Referee(row) if row else None
 
     def get_meet_members(self, meeting_id):
         members = []
         sql = """SELECT m.*
                  FROM members m INNER JOIN meetmembers mm
-                         ON m.id = mm.members
-                         WHERE mm.meeting=%d""" % meeting_id
-        rows = self.database.select(sql)
+                 ON m.id = mm.members
+                 WHERE mm.meeting=?"""
+        params = (meeting_id,)
+        rows = self.database.select(sql, params)
         for row in rows:
             members.append(Member(row))
         return members
 
-    def insert_or_update_meeting(self, meeting):
-        #sql = """UPDATE meeting
-        #         SET name=%s, sdate=%s, edate=%s, city=%s, meetcount=%s, mainreferee=%d, mainclerk=%d
-        #         WHERE id=%d""" % (meeting.name, meeting.start_date, meeting.end_date, meeting.city, meeting.meetcount,
-        #                           meeting.main_referee_id, meeting.main_clerk_id, meeting.id)
-        sql = "UPDATE meeting SET name=?, sdate=?, edate=?, city=?, meetcount=?, mainreferee=?, mainclerk=? WHERE id=?", (meeting.name, meeting.start_date, meeting.end_date, meeting.city, meeting.meetcount, meeting.main_referee_id, meeting.main_clerk_id, meeting.id)
-        self.database.ins_upd(sql)
+    def update_meeting(self, meeting):
+        sql = """UPDATE meeting
+                 SET name=?, sdate=?, edate=?, city=?, meetcount=?, mainreferee=?, mainclerk=? 
+                 WHERE id=?"""
+        params = (meeting.name.replace('\\', ''), meeting.start_date, meeting.end_date, meeting.city.replace('\\',''),
+                  meeting.meetcount, meeting.main_referee_id, meeting.main_clerk_id, meeting.id)
+
+        self.database.ins_upd(sql, params)
+
+    def delete_meet_referees(self, meeting_id):
+        sql = "DELETE FROM meetreferees WHERE meeting=?"
+        params = (meeting_id,)
+        self.database.delete(sql, params)
+
+    def insert_meet_referee(self, meet_referee):
+        sql = """INSERT INTO meetreferees(meeting, referee) VALUES (?, ?)"""
+        params = (meet_referee.meeting_id, meet_referee.referee_id)
+        self.database.ins_upd(sql, params)
