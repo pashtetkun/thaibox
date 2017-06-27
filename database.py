@@ -273,7 +273,10 @@ class Dbase():
 
 		self.conn = self.connect(self.path)
 		self.cursor = self.conn.cursor()
-		self.cursor.execute(select, params)
+		if params:
+			self.cursor.execute(select, params)
+		else:
+			self.cursor.execute(select)
 		row = self.cursor.fetchone()
 		self.cursor.close()
 
@@ -286,7 +289,10 @@ class Dbase():
 		# Insert or update record into base
 		self.conn = self.connect(self.path)
 		self.cursor = self.conn.cursor()
-		self.cursor.execute(ins_upd, params)
+		if params:
+			self.cursor.execute(ins_upd, params)
+		else:
+			self.cursor.execute(ins_upd)
 		lastid_row = self.cursor.lastrowid
 		self.conn.commit()
 
@@ -298,6 +304,10 @@ class Dbase():
 
 		self.conn = self.connect(self.path)
 		self.cursor = self.conn.cursor()
-		self.cursor.execute(delete, params)
+		if params:
+			self.cursor.execute(delete, params)
+		else:
+			self.cursor.execute(delete)
+
 		self.conn.commit()
 

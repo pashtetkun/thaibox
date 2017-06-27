@@ -2,7 +2,8 @@ import sys
 from cx_Freeze import setup, Executable
 
 
-build_exe_options = {"packages": ["os"], "excludes": ["tkinter"]}
+build_exe_options = {"packages": ["os"], "excludes": ["tkinter"],
+                     "includes": ["lxml._elementpath"]}
 
 base = None
 if sys.platform == "win32":
