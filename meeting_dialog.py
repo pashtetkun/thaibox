@@ -1,9 +1,8 @@
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QDialog, QListWidgetItem
 from meet import Ui_Dialog as createmeeting
-from database import Dbase as db
 from database_manager import DbManager as dbmanager
-from models import Meeting, MeetReferee
+from models import Meeting, MeetReferee, MeetMember, Sortition
 from validator import Valid
 from input_error_slots import InputErrorSlots
 import random
@@ -317,9 +316,9 @@ class MeetingDialog(QDialog):
 		self.dbm.update_meeting(self.meet)
 
 		'''# TODO: Очистить таблицу судей от старых данных по текущему соревнованию'''
-		self.dbm.delete_meet_referees(self.meet.id)
+		self.dbm.delete_meet_referee(self.meet.id)
 		count = len(self.meet_referees)
-		
+
 		for referee in self.meet_referees:
 			meet_referee = MeetReferee()
 			meet_referee.meeting_id = self.meet.id
@@ -328,7 +327,7 @@ class MeetingDialog(QDialog):
 
 		self.close()
 
-	def sortition(self, list):
+	def sortition(self, members=[]):
 
 		def change_ring():
 
@@ -341,37 +340,51 @@ class MeetingDialog(QDialog):
 			else:
 				self.ring = 1
 
-		#print(list)
 		''' проверить сколько элементов в списке, если больше или равно 3, то жеребьевка случайным образом взять два
 		элемента (удалить их из списка)'''
-		database = db()
+
 		if self.meet:
 			self.meeting = self.id
 
-		while len(list) > 0:
-			if len(list) == 1:
-				database.ins_upd('INSERT INTO sortition(idmeet, membera, memberb, ring) VALUES (' + str(self.meeting) + ', ' + str(list[0]) + ', 0, ' + str(self.ring) + ')')
-				list = []
+		if not members:
+			return
+
+		while len(members) > 0:
+			if len(members) == 1:
+				sortition = Sortition()
+				sortition.meeting_id = self.meet.id
+				sortition.member_a_id = members[0].id
+				sortition.member_b_id = 0
+				sortition.ring = self.ring
+				self.dbm.insert_sortition(sortition)
+
 				#TODO: Смена ринга (сделать в форме запрос количества рингов)
 				if self.ui.divrings.isChecked():
 					change_ring()
-				continue
-			elif len(list) == 2:
-				database.ins_upd('INSERT INTO sortition(idmeet, membera, memberb, ring) VALUES (' + str(self.meeting) + ', ' + str(list[0]) + ', ' + str(list[1]) + ', ' + str(self.ring) + ')')
-				list = []
+				break
+			elif len(members) == 2:
+				sortition = Sortition()
+				sortition.meeting_id = self.meet.id
+				sortition.member_a_id = members[0].id
+				sortition.member_b_id = members[1].id
+				sortition.ring = self.ring
+				self.dbm.insert_sortition(sortition)
 				# TODO: Смена ринга (сделать в форме запрос количества рингов)
 				if self.ui.divrings.isChecked():
 					change_ring()
-				continue
-			elif len(list) >= 3:
+				break
+			elif len(members) >= 3:
 				# случайный жребий
-				a = random.randint(0, len(list)-1)
-				mem_a = list[a]
-				list.pop(a)
-				b = random.randint(0, len(list)-1)
-				mem_b = list[b]
-				list.pop(b)
-				database.ins_upd('INSERT INTO sortition(idmeet, membera, memberb, ring) VALUES (' + str(self.meeting) + ', ' + str(mem_a) + ', ' + str(mem_b) + ', ' + str(self.ring) + ')')
+				mem_a = random.choice(members)
+				members.remove(mem_a)
+				mem_b = random.choice(members)
+				members.remove(mem_b)
+				sortition = Sortition()
+				sortition.meeting_id = self.meet.id
+				sortition.member_a_id = mem_a.id
+				sortition.member_b_id = mem_b.id
+				sortition.ring = self.ring
+				self.dbm.insert_sortition(sortition)
 				# TODO: Смена ринга (сделать в форме запрос количества рингов)
 				if self.ui.divrings.isChecked():
 					change_ring()
@@ -382,15 +395,14 @@ class MeetingDialog(QDialog):
 		'''# TODO: 2. Заполнить таблицу участников основываясь на ID созданного соревнования и ID участника'''
 		# TODO: Проверить валидность данных
 
-		database = db()
 		validator = Valid()
 
 		'''# TODO: Если соревнование редактируется, то у далить старые данные'''
 		'''# TODO: проверить не редактируется ли соревнование, если да, то удалить старые данные сортировки'''
 		if self.meet:
-			database.delete('DELETE FROM meetmembers WHERE meeting=\'' + str(self.id) + '\'')
-			database.delete('DELETE FROM meetreferees WHERE meeting=\'' + str(self.id) + '\'')
-			database.delete('DELETE FROM sortition WHERE idmeet=\'' + str(self.id) + '\'')
+			self.dbm.delete_meet_member(self.meet.id)
+			self.dbm.delete_meet_referee(self.meet.id)
+			self.dbm.delete_meet_sortition(self.meet.id)
 			self.meeting = self.id
 		else:
 			self.meeting = 0
@@ -400,63 +412,55 @@ class MeetingDialog(QDialog):
 		if not self.valid(validator.validDigit(self.ui.meetCountEdit.text())):
 			return
 
-		mainref = database.select('SELECT id FROM referee WHERE fio=\'' + self.ui.mainrefCBox.itemText(self.ui.mainrefCBox.currentIndex()) + '\'')
-		mainclerk = database.select('SELECT id FROM referee WHERE fio=\'' + self.ui.mainclerkCBox.itemText(self.ui.mainclerkCBox.currentIndex()) + '\'')
-
-		count = self.ui.membersList.count()
-		i = 0
-		listmembers = []
+		count = len(self.meet_members)
 		man = {}
 		woman = {}
-		cat = {}
 
 		#TODO: Если self.ui.meetCountEdit.text() пустое то установить его по количеству участников (боев будет не больше чем если каждый участник один выйдет на ринг)
 
 		if self.ui.meetCountEdit.text() == '':
 			self.ui.meetCountEdit.setText(str(count))
 
+		self.meet = self.get_meeting_values()
+
 		if self.meet:
-			row = database.ins_upd('UPDATE meeting SET name=\'' + validator.escape(self.ui.nameEdit.text()) + '\', sdate=\'' + self.ui.startDate.date().toPyDate().strftime('%Y-%m-%d') + '\', edate=\'' + self.ui.endDate.date().toPyDate().strftime('%Y-%m-%d') + '\', city=\'' + validator.escape(self.ui.cityEdit.text()) + '\', meetcount=\'' + self.ui.meetCountEdit.text() + '\', mainreferee=\'' + str(mainref[0][0]) + '\', mainclerk=\'' + str(mainclerk[0][0]) + '\' WHERE id=\'' + str(self.id) + '\'')
+			self.dbm.update_meeting(self.meet)
 		else:
-			self.meeting = database.ins_upd('INSERT INTO meeting(name, sdate, edate, city, meetcount, mainreferee, mainclerk) VALUES (\'' + validator.escape(self.ui.nameEdit.text()) + '\', \'' + self.ui.startDate.date().toPyDate().strftime('%Y-%m-%d') + '\', \'' + self.ui.endDate.date().toPyDate().strftime('%Y-%m-%d') + '\', \'' + validator.escape(self.ui.cityEdit.text()) + '\', \'' + self.ui.meetCountEdit.text() + '\', \'' + str(mainref[0][0]) + '\', \'' + str(mainclerk[0][0]) + '\')')
+			self.meet = self.dbm.insert_meeting(self.meet)
 
-
-
-		while i < count:
-			mem = database.select('SELECT id, sex, weight FROM members WHERE fio=\'' + validator.escape(
-				self.ui.membersList.item(i).text()) + '\'')
+		for member in self.meet_members:
 			'''# TODO: 1. Разобрать участников по полу'''
 			'''# TODO: 1.1 Получить список участников (в список)'''
-			(id, sex, weight) = mem[0]
-			if sex == 1:
+			if member.sex_id == 1:
 				# если мужчина
 				'''# TODO: Разобрать участников по весовой категории'''
-				if weight in man:
+				if member.weight_id in man:
 					print("Мужчины - Есть")
-					man[weight].append(id)
+					man[member.weight_id].append(member)
 				else:
 					print("Мужчины - Нет")
-					man[weight] = list()
-					man[weight].append(id)
-			elif sex ==2:
+					man[member.weight_id] = [member]
+
+			elif member.sex_id == 2:
 				'''# TODO: Разобрать участников по весовой категории'''
 				# если женщина
-				if weight in woman:
+				if member.weight_id in woman:
 					print("Женщины - Есть")
-					woman[weight].append(id)
+					woman[member.weight_id].append(member)
 				else:
 					print("Женщины - Нет")
-					woman[weight] = list()
-					woman[weight].append(id)
-			database.ins_upd('INSERT INTO meetmembers(meeting, members) VALUES (\'' + str(self.meeting) + '\', \'' + str(id) + '\')')
-			i += 1
+					woman[member.weight_id] = [member]
+			meet_member = MeetMember()
+			meet_member.meeting_id = self.meet.id
+			meet_member.member_id = member.id
+			self.dbm.insert_meet_member(meet_member)
 
-		count = self.ui.refColList.count()
-		i = 0
-		while i < count:
-			ref = database.select('SELECT id FROM referee WHERE fio=\'' + self.ui.refColList.item(i).text() + '\'')
-			database.ins_upd('INSERT INTO meetreferees(meeting, referee) VALUES (\'' + str(self.meeting) + '\', \'' + str(ref[0][0]) + '\')')
-			i += 1
+		count = len(self.meet_referees)
+		for referee in self.meet_referees:
+			meet_referee = MeetReferee()
+			meet_referee.meeting_id = self.meet.id
+			meet_referee.referee_id = referee.id
+			self.dbm.insert_meet_referee(meet_referee)
 
 		'''# TODO: Сделать жеребьевку'''
 		# TODO: Отсортировать по рязряду (исправить в случае изменения порядка разрядов)

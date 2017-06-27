@@ -65,7 +65,7 @@ class DbManager():
 
         self.database.ins_upd(sql, params)
 
-    def delete_meet_referees(self, meeting_id):
+    def delete_meet_referee(self, meeting_id):
         sql = "DELETE FROM meetreferees WHERE meeting=?"
         params = (meeting_id,)
         self.database.delete(sql, params)
@@ -73,4 +73,37 @@ class DbManager():
     def insert_meet_referee(self, meet_referee):
         sql = """INSERT INTO meetreferees(meeting, referee) VALUES (?, ?)"""
         params = (meet_referee.meeting_id, meet_referee.referee_id)
+        self.database.ins_upd(sql, params)
+
+    def delete_meet_member(self, meeting_id):
+        sql = "DELETE FROM meetmembers WHERE meeting=?"
+        params = (meeting_id,)
+        self.database.delete(sql, params)
+
+    def delete_meet_sortition(self, meeting_id):
+        sql = "DELETE FROM sortition WHERE idmeet=?"
+        params = (meeting_id,)
+        self.database.delete(sql, params)
+
+    def get_meeting(self, id):
+        row = self.database.select_one('SELECT * FROM meeting WHERE id=?', (id,))
+        return Meeting(row) if row else None
+
+    def insert_meeting(self, meeting):
+        sql = """INSERT INTO meeting(name, sdate, edate, city, meetcount, mainreferee, mainclerk) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)"""
+        params = (meeting.name.replace('\\', ''), meeting.start_date, meeting.end_date, meeting.city.replace('\\',''),
+                  meeting.meetcount, meeting.main_referee_id, meeting.main_clerk_id)
+        id = self.database.ins_upd(sql, params)
+        return self.get_meeting(id)
+
+    def insert_meet_member(self, meet_member):
+        sql = """INSERT INTO meetmembers(meeting, members) VALUES (?, ?)"""
+        params = (meet_member.meeting_id, meet_member.member_id)
+        self.database.ins_upd(sql, params)
+
+    def insert_sortition(self, sortition):
+        sql = """INSERT INTO sortition(idmeet, membera, memberb, ring)
+                    VALUES (?, ?, ?, ?)"""
+        params = (sortition.meeting_id, sortition.member_a_id, sortition.member_b_id, sortition.ring)
         self.database.ins_upd(sql, params)

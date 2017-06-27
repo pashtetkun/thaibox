@@ -44,10 +44,11 @@ class Meeting():
 
 
 class MeetMember():
-    def __init__(self, row):
-        self.id = row[0]
-        self.meeting_id = row[1]
-        self.member_id = row[2]
+    def __init__(self, row=[]):
+        if row:
+            self.id = row[0]
+            self.meeting_id = row[1]
+            self.member_id = row[2]
 
 
 class MeetReferee():
@@ -56,3 +57,12 @@ class MeetReferee():
             self.id = row[0]
             self.meeting_id = row[1]
             self.referee_id = row[2]
+
+class Sortition():
+    def __init__(self, row=[]):
+        if row:
+            self.id = row[0]
+            self.meeting_id = row[1]
+            self.member_a_id = row[2]
+            self.member_b_id = row[3]
+            self.ring = row[4]
