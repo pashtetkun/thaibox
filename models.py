@@ -50,6 +50,7 @@ class MeetMember():
             self.id = row[0]
             self.meeting_id = row[1]
             self.member_id = row[2]
+            self.is_active = row[3]
 
 
 class MeetReferee():

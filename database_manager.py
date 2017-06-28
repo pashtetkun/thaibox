@@ -46,14 +46,16 @@ class DbManager():
 
     def get_meet_members(self, meeting_id):
         members = []
-        sql = """SELECT m.*
+        sql = """SELECT m.*, mm.is_active
                  FROM members m INNER JOIN meetmembers mm
                  ON m.id = mm.members
                  WHERE mm.meeting=?"""
         params = (meeting_id,)
         rows = self.database.select(sql, params)
         for row in rows:
-            members.append(Member(row))
+            member = Member(row)
+            member.is_active = row[-1]
+            members.append(member)
         return members
 
     def update_meeting(self, meeting):
@@ -98,8 +100,8 @@ class DbManager():
         return self.get_meeting(id)
 
     def insert_meet_member(self, meet_member):
-        sql = """INSERT INTO meetmembers(meeting, members) VALUES (?, ?)"""
-        params = (meet_member.meeting_id, meet_member.member_id)
+        sql = """INSERT INTO meetmembers(meeting, members, is_active) VALUES (?, ?, ?)"""
+        params = (meet_member.meeting_id, meet_member.member_id, meet_member.is_active)
         self.database.ins_upd(sql, params)
 
     def insert_sortition(self, sortition):

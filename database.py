@@ -9,6 +9,8 @@ from starting import Ui_dialog as insdata
 import re
 
 
+CURRENT_VERSION = 1
+
 class CreateBase(QDialog):
 	def __init__(self):
 		super(CreateBase, self).__init__()
@@ -51,12 +53,16 @@ class Dbase():
 		self.path = conf.base_path[0] + '/' + conf.base_file[0]
 		self.path_el = re.split('\/', self.path)  # проверить как ведет себя в Windows
 		self.file = self.path_el[-1]
-		self.conn = ''
+
+		self.connection = None
+		self.cursor = None
 
 		try:
 			if self.base_exist(self.path):
-				self.connect(self.path)
+				self.connection = self.connect(self.path)
+				self.cursor = self.connection.cursor()
 				# self.conn = sqlite3.connect(path)
+				self.check_updates(CURRENT_VERSION)
 			else:
 				print("Base don't exist")
 				'''# TODO: database: Спросить надо ли указать другой путь к базе'''
@@ -72,6 +78,8 @@ class Dbase():
 					self.change_path_base()
 
 		except IOError as e:
+			print(e)
+		except Exception as e:
 			print(e)
 
 	def find_base(self, path):
@@ -141,10 +149,11 @@ class Dbase():
 		ring = "CREATE TABLE ring (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, ring CHAR (255));"
 		weightcategory = "CREATE TABLE weightcategory (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, wcategory CHAR (255) UNIQUE);"
 		meeting = "CREATE TABLE meeting (id INTEGER PRIMARY KEY ASC AUTOINCREMENT, name CHAR (254), sdate DATE, edate DATE, city CHAR (254), meetcount INTEGER (3), mainreferee INTEGER REFERENCES referee (id), mainclerk INTEGER REFERENCES referee (id));"
-		meetmembers = "CREATE TABLE meetmembers (id INTEGER PRIMARY KEY ASC AUTOINCREMENT, meeting INTEGER REFERENCES meeting (id), members INTEGER REFERENCES members (id));"
+		meetmembers = "CREATE TABLE meetmembers (id INTEGER PRIMARY KEY ASC AUTOINCREMENT, meeting INTEGER REFERENCES meeting (id), members INTEGER REFERENCES members (id), is_active INTEGER(1) DEFAULT(0));"
 		meetreferees = "CREATE TABLE meetreferees (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, meeting INTEGER REFERENCES meeting (id), referee INTEGER REFERENCES referee (id));"
 		sortition = "CREATE TABLE sortition (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, idmeet INTEGER (9) REFERENCES meeting (id), membera INTEGER (9) REFERENCES members (id), memberb INTEGER (9) REFERENCES members (id) DEFAULT (0), ring INTEGER (2) REFERENCES ring (id));"
 		category = "CREATE TABLE category (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, category CHAR (255));"
+		version = """CREATE TABLE version (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, version int DEFAULT(0));"""
 
 		self.cursor.execute(referee)
 		self.cursor.execute(refereecat)
@@ -159,6 +168,7 @@ class Dbase():
 		self.cursor.execute(meetreferees)
 		self.cursor.execute(sortition)
 		self.cursor.execute(category)
+		self.cursor.execute(version)
 
 		self.conn.commit()
 
@@ -248,6 +258,8 @@ class Dbase():
 		self.ins_upd("INSERT INTO weightcategory(wcategory) VALUES (\"" + "Девушки 12-13 лет до 48 кг" + "\")")
 		self.ins_upd("INSERT INTO weightcategory(wcategory) VALUES (\"" + "Девушки 12-13 лет до 52 кг" + "\")")
 		self.ins_upd("INSERT INTO weightcategory(wcategory) VALUES (\"" + "Девушки 12-13 лет до 60 кг" + "\")")
+
+		self.ins_upd("INSERT INTO version(version) VALUES (%d)" % CURRENT_VERSION)
 		#self.insertdata.ui.progress.setValue(100)
 
 		#self.insertdata.close()
@@ -310,4 +322,29 @@ class Dbase():
 			self.cursor.execute(delete)
 
 		self.conn.commit()
+
+	def check_updates(self, current_version):
+		self.cursor.execute("""CREATE TABLE IF NOT EXISTS version (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, version int DEFAULT(0))""")
+		self.connection.commit()
+		self.cursor.execute("""SELECT version FROM version LIMIT 1""")
+		version = 0
+		id = 0
+		row = self.cursor.fetchone()
+		if not row:
+			self.cursor.execute("""INSERT INTO version (version) VALUES(%d)""" % version)
+			id = self.cursor.lastrowid
+			self.connection.commit()
+
+		else:
+			id = row[0]
+			version = row[1]
+
+		# 0 --> 1
+		if current_version > version:
+			print("Требуется обновление версии с %d до %d" % (version, current_version))
+			self.cursor.execute("""ALTER TABLE meetmembers ADD COLUMN is_active int DEFAULT(1)""")
+			self.cursor.execute("""UPDATE version SET version=%d WHERE id=%d""" % (current_version, id))
+			self.connection.commit()
+			print("Обновление успешно завершено")
+
 

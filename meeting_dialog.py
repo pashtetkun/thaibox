@@ -461,6 +461,7 @@ class MeetingDialog(QDialog):
 			meet_member = MeetMember()
 			meet_member.meeting_id = self.meet.id
 			meet_member.member_id = member.id
+			meet_member.is_active = member.is_active
 			self.dbm.insert_meet_member(meet_member)
 
 		count = len(self.meet_referees)
