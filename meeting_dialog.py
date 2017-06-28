@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QDialog, QListWidgetItem
+from PyQt5.QtWidgets import QDialog, QListWidgetItem, QMenu, QAction
 from meet import Ui_Dialog as createmeeting
 from database_manager import DbManager as dbmanager
 from models import Meeting, MeetReferee, MeetMember, Sortition
@@ -78,6 +78,11 @@ class MeetingDialog(QDialog):
 
 		self.ui.weightcatCBox.setCurrentIndex(-1)
 		self.ui.weightcatCBox.setCurrentIndex(0)
+
+		self.ui.membersList.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+		self.ui.membersList.customContextMenuRequested.connect(self.show_cmenu)
+
+		self.ui.membersList.itemPressed.connect(self.memberListItem_pressed)
 
 
 		'''# TODO: сделать список выбора и заполнить его весовыми категориями'''
@@ -171,6 +176,9 @@ class MeetingDialog(QDialog):
 			if not self.current_weight_category or (self.current_weight_category and member.weight_id == self.current_weight_category.id):
 				item = QListWidgetItem(member.fio.replace('\\', ''))
 				item.setData(QtCore.Qt.UserRole, member)
+				#item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+				#item.setCheckState(QtCore.Qt.Checked)
+				self.set_item_background(item)
 				self.ui.membersList.addItem(item)
 
 	def weight_category_changed(self):
@@ -478,3 +486,36 @@ class MeetingDialog(QDialog):
 	def cancel_pressed(self):
 
 		self.close()
+
+	def show_cmenu(self, pos):
+		current_item = self.ui.membersList.currentItem()
+		if not current_item:
+			return
+		member = current_item.data(QtCore.Qt.UserRole)
+		menu = QMenu(self)
+		actionSetLose = menu.addAction('-> проигравший', lambda: self.set_member_status(current_item))
+		actionSetMember = menu.addAction('<- участник', lambda: self.set_member_status(current_item))
+
+		actionSetLose.setEnabled(not member.isLose)
+		actionSetMember.setEnabled(member.isLose)
+		menu.exec_(QtGui.QCursor.pos())
+
+	def set_member_status(self, current_item):
+		member = current_item.data(QtCore.Qt.UserRole)
+		member.isLose = not member.isLose
+
+		#if member.isLose
+		#current_item.setFlags(current_item.flags() & QtCore.Qt.ItemIsEnabled)
+		#background = "lightGray" if member.isLose else "white"
+		#current_item.setBackground(QtGui.QColor(background))
+		self.set_item_background(current_item)
+		self.memberListItem_pressed(current_item)
+
+	def memberListItem_pressed(self, item):
+		member = item.data(QtCore.Qt.UserRole)
+		self.ui.removeButton.setEnabled(not member.isLose)
+
+	def set_item_background(self, item):
+		member = item.data(QtCore.Qt.UserRole)
+		background = "lightGray" if member.isLose else "white"
+		item.setBackground(QtGui.QColor(background))

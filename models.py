@@ -13,6 +13,7 @@ class Member():
         self.region = row[7]
         self.city = row[8]
         self.trainer = row[9]
+        self.isLose = False
 
 
 class Referee():
