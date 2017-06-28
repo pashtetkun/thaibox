@@ -496,26 +496,22 @@ class MeetingDialog(QDialog):
 		actionSetLose = menu.addAction('-> проигравший', lambda: self.set_member_status(current_item))
 		actionSetMember = menu.addAction('<- участник', lambda: self.set_member_status(current_item))
 
-		actionSetLose.setEnabled(not member.isLose)
-		actionSetMember.setEnabled(member.isLose)
+		actionSetLose.setEnabled(member.is_active)
+		actionSetMember.setEnabled(not member.is_active)
 		menu.exec_(QtGui.QCursor.pos())
 
 	def set_member_status(self, current_item):
 		member = current_item.data(QtCore.Qt.UserRole)
-		member.isLose = not member.isLose
+		member.is_active = not member.is_active
 
-		#if member.isLose
-		#current_item.setFlags(current_item.flags() & QtCore.Qt.ItemIsEnabled)
-		#background = "lightGray" if member.isLose else "white"
-		#current_item.setBackground(QtGui.QColor(background))
 		self.set_item_background(current_item)
 		self.memberListItem_pressed(current_item)
 
 	def memberListItem_pressed(self, item):
 		member = item.data(QtCore.Qt.UserRole)
-		self.ui.removeButton.setEnabled(not member.isLose)
+		self.ui.removeButton.setEnabled(member.is_active)
 
 	def set_item_background(self, item):
 		member = item.data(QtCore.Qt.UserRole)
-		background = "lightGray" if member.isLose else "white"
+		background = "white" if member.is_active else "lightGray"
 		item.setBackground(QtGui.QColor(background))
