@@ -60,6 +60,7 @@ class MeetReferee():
             self.meeting_id = row[1]
             self.referee_id = row[2]
 
+
 class Sortition():
     def __init__(self, row=[]):
         if row:
@@ -68,3 +69,22 @@ class Sortition():
             self.member_a_id = row[2]
             self.member_b_id = row[3]
             self.ring = row[4]
+
+
+class Version():
+    def __init__(self, row=[]):
+        if row:
+            self.id = row[0]
+            self.version = row[1]
+
+
+class Fighting():
+    def __init__(self, row=[]):
+        if row:
+            self.id = row[0]
+            self.meeting_id = row[1]
+            self.fractional_round = row[2]
+            self.member_a_id = row[3]
+            self.member_b_id = row[4]
+            self.ring = row[5]
+            self.winner_id = row[6]

@@ -9,7 +9,7 @@ from starting import Ui_dialog as insdata
 import re
 
 
-CURRENT_VERSION = 1
+CURRENT_VERSION = 2
 
 class CreateBase(QDialog):
 	def __init__(self):
@@ -154,7 +154,14 @@ class Dbase():
 		sortition = "CREATE TABLE sortition (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, idmeet INTEGER (9) REFERENCES meeting (id), membera INTEGER (9) REFERENCES members (id), memberb INTEGER (9) REFERENCES members (id) DEFAULT (0), ring INTEGER (2) REFERENCES ring (id));"
 		category = "CREATE TABLE category (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, category CHAR (255));"
 		version = """CREATE TABLE version (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, version int DEFAULT(0));"""
-
+		fightings = """CREATE TABLE fightings 
+						(id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, 
+						meeting INTEGER (9) REFERENCES meeting (id),
+						fractional_round INTEGER (9) NOT NULL,
+						membera INTEGER (9) REFERENCES members (id) NOT NULL, 
+						memberb INTEGER (9) REFERENCES members (id), 
+						ring INTEGER (2) REFERENCES ring (id),
+						winner INTEGER (9) REFERENCES members (id))"""
 		self.cursor.execute(referee)
 		self.cursor.execute(refereecat)
 		self.cursor.execute(refereepos)
@@ -169,6 +176,7 @@ class Dbase():
 		self.cursor.execute(sortition)
 		self.cursor.execute(category)
 		self.cursor.execute(version)
+		self.cursor.execute(fightings)
 
 		self.conn.commit()
 
@@ -326,7 +334,7 @@ class Dbase():
 	def check_updates(self, current_version):
 		self.cursor.execute("""CREATE TABLE IF NOT EXISTS version (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, version int DEFAULT(0))""")
 		self.connection.commit()
-		self.cursor.execute("""SELECT version FROM version LIMIT 1""")
+		self.cursor.execute("""SELECT id, version FROM version LIMIT 1""")
 		version = 0
 		id = 0
 		row = self.cursor.fetchone()
@@ -340,10 +348,22 @@ class Dbase():
 			version = row[1]
 
 		# 0 --> 1
-		if current_version > version:
+		if current_version == 1 and current_version > version:
 			print("Требуется обновление версии с %d до %d" % (version, current_version))
 			self.cursor.execute("""ALTER TABLE meetmembers ADD COLUMN is_active int DEFAULT(1)""")
 			self.cursor.execute("""UPDATE version SET version=%d WHERE id=%d""" % (current_version, id))
+			self.connection.commit()
+			print("Обновление успешно завершено")
+		if current_version == 2 and current_version > version:
+			print("Требуется обновление версии с %d до %d" % (version, current_version))
+			self.cursor.execute("""CREATE TABLE fightings 
+				(id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, 
+				meeting INTEGER (9) REFERENCES meeting (id),
+				fractional_round INTEGER (9) NOT NULL,
+				membera INTEGER (9) REFERENCES members (id) NOT NULL, 
+				memberb INTEGER (9) REFERENCES members (id), 
+				ring INTEGER (2) REFERENCES ring (id),
+				winner INTEGER (9) REFERENCES members (id))""")
 			self.connection.commit()
 			print("Обновление успешно завершено")
 

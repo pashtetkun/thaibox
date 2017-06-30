@@ -109,3 +109,7 @@ class DbManager():
                     VALUES (?, ?, ?, ?)"""
         params = (sortition.meeting_id, sortition.member_a_id, sortition.member_b_id, sortition.ring)
         self.database.ins_upd(sql, params)
+
+    def get_version(self):
+        row = self.database.select_one('SELECT * FROM version LIMIT 1')
+        return Version(row) if row else None
