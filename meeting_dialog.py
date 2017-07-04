@@ -405,7 +405,7 @@ class MeetingDialog(QDialog):
 
 		validator = Valid()
 
-		'''# TODO: Если соревнование редактируется, то у далить старые данные'''
+		'''# TODO: Если соревнование редактируется, то удалить старые данные'''
 		'''# TODO: проверить не редактируется ли соревнование, если да, то удалить старые данные сортировки'''
 		if self.meet:
 			self.dbm.delete_meet_member(self.meet.id)
@@ -436,7 +436,18 @@ class MeetingDialog(QDialog):
 		else:
 			self.meet = self.dbm.insert_meeting(self.meet)
 
+		#сохраняем участников
 		for member in self.meet_members:
+			meet_member = MeetMember()
+			meet_member.meeting_id = self.meet.id
+			meet_member.member_id = member.id
+			meet_member.is_active = member.is_active
+			self.dbm.insert_meet_member(meet_member)
+
+		#разбираем по весовым категориям
+		for member in self.meet_members:
+			if not member.is_active:
+				continue
 			'''# TODO: 1. Разобрать участников по полу'''
 			'''# TODO: 1.1 Получить список участников (в список)'''
 			if member.sex_id == 1:
@@ -458,12 +469,8 @@ class MeetingDialog(QDialog):
 				else:
 					print("Женщины - Нет")
 					woman[member.weight_id] = [member]
-			meet_member = MeetMember()
-			meet_member.meeting_id = self.meet.id
-			meet_member.member_id = member.id
-			meet_member.is_active = member.is_active
-			self.dbm.insert_meet_member(meet_member)
 
+		#сохраняем судей
 		count = len(self.meet_referees)
 		for referee in self.meet_referees:
 			meet_referee = MeetReferee()
@@ -474,13 +481,10 @@ class MeetingDialog(QDialog):
 		'''# TODO: Сделать жеребьевку'''
 		# TODO: Отсортировать по рязряду (исправить в случае изменения порядка разрядов)
 		# TODO: Сделать приоритет жеребьевки по разряду участника
-		try:
-			for key, value in man.items():
-				self.sortition(value)
-			for key, value in woman.items():
-				self.sortition(value)
-		except Exception as e:
-			print(e)
+		for key, value in man.items():
+			self.sortition(value)
+		for key, value in woman.items():
+			self.sortition(value)
 
 		'''# TODO: Сделать выборку из групп пока количество больше 1'''
 
