@@ -67,8 +67,10 @@ class Sortition():
             self.id = row[0]
             self.meeting_id = row[1]
             self.member_a_id = row[2]
-            self.member_b_id = row[3]
-            self.ring = row[4]
+            self.wina = row[3]
+            self.member_b_id = row[4]
+            self.winb = row[5]
+            self.ring = row[6]
 
 
 class Version():

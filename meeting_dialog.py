@@ -474,10 +474,13 @@ class MeetingDialog(QDialog):
 		'''# TODO: Сделать жеребьевку'''
 		# TODO: Отсортировать по рязряду (исправить в случае изменения порядка разрядов)
 		# TODO: Сделать приоритет жеребьевки по разряду участника
-		for key, value in man.items():
-			self.sortition(value)
-		for key, value in woman.items():
-			self.sortition(value)
+		try:
+			for key, value in man.items():
+				self.sortition(value)
+			for key, value in woman.items():
+				self.sortition(value)
+		except Exception as e:
+			print(e)
 
 		'''# TODO: Сделать выборку из групп пока количество больше 1'''
 
