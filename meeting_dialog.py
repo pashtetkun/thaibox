@@ -358,44 +358,32 @@ class MeetingDialog(QDialog):
 			return
 
 		while len(members) > 0:
+			sortition = Sortition()
+			sortition.meeting_id = self.meet.id
+			sortition.ring = self.ring
+
 			if len(members) == 1:
-				sortition = Sortition()
-				sortition.meeting_id = self.meet.id
 				sortition.member_a_id = members[0].id
 				sortition.member_b_id = 0
-				sortition.ring = self.ring
-				self.dbm.insert_sortition(sortition)
-
-				#TODO: Смена ринга (сделать в форме запрос количества рингов)
-				if self.ui.divrings.isChecked():
-					change_ring()
-				break
+				members.clear()
 			elif len(members) == 2:
-				sortition = Sortition()
-				sortition.meeting_id = self.meet.id
 				sortition.member_a_id = members[0].id
 				sortition.member_b_id = members[1].id
-				sortition.ring = self.ring
-				self.dbm.insert_sortition(sortition)
-				# TODO: Смена ринга (сделать в форме запрос количества рингов)
-				if self.ui.divrings.isChecked():
-					change_ring()
-				break
+				members.clear()
 			elif len(members) >= 3:
 				# случайный жребий
 				mem_a = random.choice(members)
 				members.remove(mem_a)
 				mem_b = random.choice(members)
 				members.remove(mem_b)
-				sortition = Sortition()
-				sortition.meeting_id = self.meet.id
 				sortition.member_a_id = mem_a.id
 				sortition.member_b_id = mem_b.id
-				sortition.ring = self.ring
-				self.dbm.insert_sortition(sortition)
-				# TODO: Смена ринга (сделать в форме запрос количества рингов)
-				if self.ui.divrings.isChecked():
-					change_ring()
+
+			self.dbm.insert_sortition(sortition)
+
+			# TODO: Смена ринга (сделать в форме запрос количества рингов)
+			if self.ui.divrings.isChecked():
+				change_ring()
 
 	def sortition_pressed(self):
 
@@ -421,8 +409,7 @@ class MeetingDialog(QDialog):
 			return
 
 		count = len(self.meet_members)
-		man = {}
-		woman = {}
+		members_by_weigth = {}
 
 		#TODO: Если self.ui.meetCountEdit.text() пустое то установить его по количеству участников (боев будет не больше чем если каждый участник один выйдет на ринг)
 
@@ -448,30 +435,12 @@ class MeetingDialog(QDialog):
 		for member in self.meet_members:
 			if not member.is_active:
 				continue
-			'''# TODO: 1. Разобрать участников по полу'''
-			'''# TODO: 1.1 Получить список участников (в список)'''
-			if member.sex_id == 1:
-				# если мужчина
-				'''# TODO: Разобрать участников по весовой категории'''
-				if member.weight_id in man:
-					print("Мужчины - Есть")
-					man[member.weight_id].append(member)
-				else:
-					print("Мужчины - Нет")
-					man[member.weight_id] = [member]
-
-			elif member.sex_id == 2:
-				'''# TODO: Разобрать участников по весовой категории'''
-				# если женщина
-				if member.weight_id in woman:
-					print("Женщины - Есть")
-					woman[member.weight_id].append(member)
-				else:
-					print("Женщины - Нет")
-					woman[member.weight_id] = [member]
+			if member.weight_id in members_by_weigth:
+				members_by_weigth[member.weight_id].append(member)
+			else:
+				members_by_weigth[member.weight_id] = [member]
 
 		#сохраняем судей
-		count = len(self.meet_referees)
 		for referee in self.meet_referees:
 			meet_referee = MeetReferee()
 			meet_referee.meeting_id = self.meet.id
@@ -481,9 +450,7 @@ class MeetingDialog(QDialog):
 		'''# TODO: Сделать жеребьевку'''
 		# TODO: Отсортировать по рязряду (исправить в случае изменения порядка разрядов)
 		# TODO: Сделать приоритет жеребьевки по разряду участника
-		for key, value in man.items():
-			self.sortition(value)
-		for key, value in woman.items():
+		for key, value in members_by_weigth.items():
 			self.sortition(value)
 
 		'''# TODO: Сделать выборку из групп пока количество больше 1'''
