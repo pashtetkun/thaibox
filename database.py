@@ -9,7 +9,7 @@ from starting import Ui_dialog as insdata
 import re
 
 
-CURRENT_VERSION = 2
+CURRENT_VERSION = 3
 
 class CreateBase(QDialog):
 	def __init__(self):
@@ -151,7 +151,15 @@ class Dbase():
 		meeting = "CREATE TABLE meeting (id INTEGER PRIMARY KEY ASC AUTOINCREMENT, name CHAR (254), sdate DATE, edate DATE, city CHAR (254), meetcount INTEGER (3), mainreferee INTEGER REFERENCES referee (id), mainclerk INTEGER REFERENCES referee (id));"
 		meetmembers = "CREATE TABLE meetmembers (id INTEGER PRIMARY KEY ASC AUTOINCREMENT, meeting INTEGER REFERENCES meeting (id), members INTEGER REFERENCES members (id), is_active INTEGER(1) DEFAULT(0));"
 		meetreferees = "CREATE TABLE meetreferees (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, meeting INTEGER REFERENCES meeting (id), referee INTEGER REFERENCES referee (id));"
-		sortition = "CREATE TABLE sortition (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, idmeet INTEGER (9) REFERENCES meeting (id), membera INTEGER (9) REFERENCES members (id), wina BOOLEAN DEFAULT False, memberb INTEGER (9) REFERENCES members (id) DEFAULT (0), winb BOOLEAN DEFAULT False, ring INTEGER (2) REFERENCES ring (id));"
+		sortition = """CREATE TABLE sortition 
+						(id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, 
+						idmeet INTEGER (9) REFERENCES meeting (id), 
+						membera INTEGER (9) REFERENCES members (id), 
+						wina BOOLEAN DEFAULT False, 
+						memberb INTEGER (9) REFERENCES members (id) DEFAULT (0), 
+						winb BOOLEAN DEFAULT False, 
+						ring INTEGER (2) REFERENCES ring (id),
+						fractional_round INTEGER (9) NOT NULL);"""
 		category = "CREATE TABLE category (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, category CHAR (255));"
 		version = """CREATE TABLE version (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, version int DEFAULT(0));"""
 		fightings = """CREATE TABLE fightings 
@@ -349,13 +357,13 @@ class Dbase():
 		if current_version > version:
 			print("Требуется обновление версии с %d до %d" % (version, current_version))
 
-			# 0 --> 1
+			# 0 --> 1 - добавлен флаг активности участника
 			if version == 0:
 				self.cursor.execute("""ALTER TABLE meetmembers ADD COLUMN is_active int DEFAULT(1)""")
 				self.cursor.execute("""UPDATE version SET version=%d WHERE id=%d""" % (1, id))
 				self.connection.commit()
 				version = 1
-			# 1 --> 2
+			# 1 --> 2 - добавлена таблица fightings (неиспользуется)
 			if version == 1:
 				self.cursor.execute("""CREATE TABLE fightings 
 					(id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, 
@@ -368,6 +376,32 @@ class Dbase():
 				self.cursor.execute("""UPDATE version SET version=%d WHERE id=%d""" % (2, id))
 				self.connection.commit()
 				version = 2
+			# 2 --> 3 - добавлен номер раунда при жеребьевке (принудительное удаление старых данных)
+			if version == 2:
+				self.cursor.execute("""DROP TABLE fightings""")
+				self.cursor.execute("""DROP TABLE sortition""")
+				self.connection.commit()
+				self.cursor.execute("""CREATE TABLE sortition 
+						(id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, 
+						idmeet INTEGER (9) REFERENCES meeting (id), 
+						membera INTEGER (9) REFERENCES members (id), 
+						wina BOOLEAN DEFAULT False, 
+						memberb INTEGER (9) REFERENCES members (id) DEFAULT (0), 
+						winb BOOLEAN DEFAULT False, 
+						ring INTEGER (2) REFERENCES ring (id),
+						fractional_round INTEGER (9) NOT NULL)""")
+				self.cursor.execute("""CREATE TABLE fightings 
+						(id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, 
+						meeting INTEGER (9) REFERENCES meeting (id),
+						fractional_round INTEGER (9) NOT NULL,
+						membera INTEGER (9) REFERENCES members (id) NOT NULL, 
+						memberb INTEGER (9) REFERENCES members (id), 
+						ring INTEGER (2) REFERENCES ring (id),
+						winner INTEGER (9) REFERENCES members (id))""")
+				self.connection.commit()
+				self.cursor.execute("""UPDATE version SET version=%d WHERE id=%d""" % (3, id))
+				self.connection.commit()
+				version = 3
 
 			print("Обновление успешно завершено")
 

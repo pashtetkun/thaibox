@@ -105,9 +105,9 @@ class DbManager():
         self.database.ins_upd(sql, params)
 
     def insert_sortition(self, sortition):
-        sql = """INSERT INTO sortition(idmeet, membera, memberb, ring)
-                    VALUES (?, ?, ?, ?)"""
-        params = (sortition.meeting_id, sortition.member_a_id, sortition.member_b_id, sortition.ring)
+        sql = """INSERT INTO sortition(idmeet, membera, memberb, ring, fractional_round)
+                    VALUES (?, ?, ?, ?, ?)"""
+        params = (sortition.meeting_id, sortition.member_a_id, sortition.member_b_id, sortition.ring, sortition.fractional_round)
         self.database.ins_upd(sql, params)
 
     def get_version(self):

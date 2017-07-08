@@ -71,6 +71,7 @@ class Sortition():
             self.member_b_id = row[4]
             self.winb = row[5]
             self.ring = row[6]
+            self.fractional_round = row[7]
 
 
 class Version():

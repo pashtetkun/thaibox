@@ -7,6 +7,7 @@ from validator import Valid
 from input_error_slots import InputErrorSlots
 import random
 import operator
+import math
 
 
 class InputError(QDialog):
@@ -357,10 +358,14 @@ class MeetingDialog(QDialog):
 		if not members:
 			return
 
+		fractional_round = math.log2(len(members))
+		print(fractional_round)
+
 		while len(members) > 0:
 			sortition = Sortition()
 			sortition.meeting_id = self.meet.id
 			sortition.ring = self.ring
+			sortition.fractional_round = fractional_round
 
 			if len(members) == 1:
 				sortition.member_a_id = members[0].id
@@ -433,6 +438,7 @@ class MeetingDialog(QDialog):
 
 		#разбираем по весовым категориям
 		for member in self.meet_members:
+			#для жеребьевки отбираем только активных участников
 			if not member.is_active:
 				continue
 			if member.weight_id in members_by_weigth:
