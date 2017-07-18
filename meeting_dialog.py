@@ -358,8 +358,19 @@ class MeetingDialog(QDialog):
 		if not members:
 			return
 
-		fractional_round = math.log2(len(members))
-		print(fractional_round)
+		#если число участников - не степень двойки, то раунд будет больше на 1
+		rounds = 0
+		val_rounds = math.log2(len(members))
+		if not float(val_rounds).is_integer():
+			rounds = math.ceil(val_rounds)#до наибольшего целого
+		else:
+			rounds = math.trunc(val_rounds)#усекаем дробную часть (дробный ноль)
+		if rounds == 0: #если один участник всего
+			rounds = 1
+
+		fractional_round = math.trunc(math.pow(2, rounds-1))
+
+		print("members: ", len(members), "fr_round: ", fractional_round)
 
 		while len(members) > 0:
 			sortition = Sortition()
