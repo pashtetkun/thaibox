@@ -336,7 +336,7 @@ class MeetingDialog(QDialog):
 
 		self.close()
 
-	def sortition(self, members=[]):
+	def sortition(self, weightcatid, members=[]):
 
 		def change_ring():
 
@@ -369,14 +369,15 @@ class MeetingDialog(QDialog):
 			rounds = 1
 
 		fractional_round = math.trunc(math.pow(2, rounds-1))
-
-		print("members: ", len(members), "fr_round: ", fractional_round)
+		wcat = next((x for x in self.weight_categories if x.id == weightcatid), None)
+		print("weightcategory: ", wcat.name, "members: ", len(members), "fr_round: ", fractional_round)
 
 		while len(members) > 0:
 			sortition = Sortition()
 			sortition.meeting_id = self.meet.id
 			sortition.ring = self.ring
 			sortition.fractional_round = fractional_round
+			sortition.weightcategory_id = weightcatid
 
 			if len(members) == 1:
 				sortition.member_a_id = members[0].id
@@ -468,7 +469,7 @@ class MeetingDialog(QDialog):
 		# TODO: Отсортировать по рязряду (исправить в случае изменения порядка разрядов)
 		# TODO: Сделать приоритет жеребьевки по разряду участника
 		for key, value in members_by_weigth.items():
-			self.sortition(value)
+			self.sortition(key, value)
 
 		'''# TODO: Сделать выборку из групп пока количество больше 1'''
 

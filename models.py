@@ -72,6 +72,7 @@ class Sortition():
             self.winb = row[5]
             self.ring = row[6]
             self.fractional_round = row[7]
+            self.weightcategory_id = row[8]
 
 
 class Version():
@@ -91,3 +92,4 @@ class Fighting():
             self.member_b_id = row[4]
             self.ring = row[5]
             self.winner_id = row[6]
+            self.weightcategory_id = row[7]

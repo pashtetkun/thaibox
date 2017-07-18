@@ -9,7 +9,7 @@ from starting import Ui_dialog as insdata
 import re
 
 
-CURRENT_VERSION = 3
+CURRENT_VERSION = 4
 
 class CreateBase(QDialog):
 	def __init__(self):
@@ -159,7 +159,8 @@ class Dbase():
 						memberb INTEGER (9) REFERENCES members (id) DEFAULT (0), 
 						winb BOOLEAN DEFAULT False, 
 						ring INTEGER (2) REFERENCES ring (id),
-						fractional_round INTEGER (9) NOT NULL);"""
+						fractional_round INTEGER (9) NOT NULL,
+						weightcategory_id INTEGER (9) REFERENCES weightcategory (id));"""
 		category = "CREATE TABLE category (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, category CHAR (255));"
 		version = """CREATE TABLE version (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, version int DEFAULT(0));"""
 		fightings = """CREATE TABLE fightings 
@@ -169,7 +170,8 @@ class Dbase():
 						membera INTEGER (9) REFERENCES members (id) NOT NULL, 
 						memberb INTEGER (9) REFERENCES members (id), 
 						ring INTEGER (2) REFERENCES ring (id),
-						winner INTEGER (9) REFERENCES members (id))"""
+						winner INTEGER (9) REFERENCES members (id),
+						weightcategory_id INTEGER (9) REFERENCES weightcategory (id));"""
 		self.cursor.execute(referee)
 		self.cursor.execute(refereecat)
 		self.cursor.execute(refereepos)
@@ -402,6 +404,34 @@ class Dbase():
 				self.cursor.execute("""UPDATE version SET version=%d WHERE id=%d""" % (3, id))
 				self.connection.commit()
 				version = 3
+			# 3 --> 4 - добавлено поле весовой категории в таблицу сортировок и таблицу боёв (принудительное удаление старых данных)
+			if version == 3:
+				self.cursor.execute("""DROP TABLE fightings""")
+				self.cursor.execute("""DROP TABLE sortition""")
+				self.connection.commit()
+				self.cursor.execute("""CREATE TABLE sortition 
+			    						(id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, 
+			    						idmeet INTEGER (9) REFERENCES meeting (id), 
+			    						membera INTEGER (9) REFERENCES members (id), 
+			    						wina BOOLEAN DEFAULT False, 
+			    						memberb INTEGER (9) REFERENCES members (id) DEFAULT (0), 
+			    						winb BOOLEAN DEFAULT False, 
+			    						ring INTEGER (2) REFERENCES ring (id),
+			    						fractional_round INTEGER (9) NOT NULL,
+			    						weightcategory_id INTEGER (9) REFERENCES weightcategory (id))""")
+				self.cursor.execute("""CREATE TABLE fightings 
+			    						(id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, 
+			    						meeting INTEGER (9) REFERENCES meeting (id),
+			    						fractional_round INTEGER (9) NOT NULL,
+			    						membera INTEGER (9) REFERENCES members (id) NOT NULL, 
+			    						memberb INTEGER (9) REFERENCES members (id), 
+			    						ring INTEGER (2) REFERENCES ring (id),
+			    						winner INTEGER (9) REFERENCES members (id),
+			    						weightcategory_id INTEGER (9) REFERENCES weightcategory (id))""")
+				self.connection.commit()
+				self.cursor.execute("""UPDATE version SET version=%d WHERE id=%d""" % (4, id))
+				self.connection.commit()
+				version = 4
 
 			print("Обновление успешно завершено")
 
