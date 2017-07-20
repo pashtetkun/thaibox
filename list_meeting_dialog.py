@@ -4,6 +4,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog
 from list_meetings import Ui_Dialog as listmeeting
 from database import Dbase as db
+from database_manager import DbManager as dbmanager
 from meeting_dialog import MeetingDialog
 import re
 import xlsxwriter
@@ -31,7 +32,7 @@ class ListMeetingDialog(QDialog):
 		self.start = ''
 		self.end = ''
 		self.city = ''
-		self.count = 0
+		self.fightings_per_day = 0
 
 		'''# TODO: Заполнить список соревнований'''
 		database = db()
@@ -77,21 +78,23 @@ class ListMeetingDialog(QDialog):
 		get_row = self.ui.tableWidget.currentRow()
 		id = self.ui.tableWidget.item(get_row, 0).text()
 		database = db()
-		meeting = database.select('SELECT * FROM meeting WHERE id=\'' + id + '\'')
+		self.dbm = dbmanager()
+		#meeting = database.select('SELECT * FROM meeting WHERE id=\'' + id + '\'')
+		meeting = self.dbm.get_meeting(id)
 		rings = database.select('SELECT * FROM ring')
 		# worksheet.
-		self.name = meeting[0][1]
-		self.start = meeting[0][2]
-		self.end = meeting[0][3]
-		self.city = re.sub(r'\\', r'', str(meeting[0][4]))
-		self.count = meeting[0][5]
-		self.mainref = meeting[0][6]
-		self.mainclerk = meeting[0][7]
+		self.name = meeting.name
+		self.start = meeting.start_date
+		self.end = meeting.end_date
+		self.city = meeting.city.replace("\\", "")
+		self.fightings_per_day = meeting.meetcount
+		self.mainref = meeting.main_referee_id
+		self.mainclerk = meeting.main_clerk_id
 		self.current_ring = 0
 		self.current_meet = 1
 		#
 		row = database.select('SELECT count(*) FROM sortition WHERE idmeet=\'' + id + '\'')
-		self.meetcol = row[0][0] # количество боев в соревновании
+		fightings_total = row[0][0] # количество боев в соревновании
 		dstart = datetime.datetime.strptime(self.start, "%Y-%m-%d")
 		dend = datetime.datetime.strptime(self.end, "%Y-%m-%d")
 		delta = dend - dstart
@@ -103,28 +106,32 @@ class ListMeetingDialog(QDialog):
 		# TODO: количество дней соревнования
 		# TODO: количество поединков в день
 		''' Количество боев делим на количество поединков в день. Получим длительность соревнования в днях'''
-		col_meet_days_virtual = math.ceil(self.meetcol / self.count)
+		meet_days_total = math.ceil(fightings_total / self.fightings_per_day)
 		''' Проверка длительности соревнования.
 		Если сумма боев по дням меньше чем длительность соревнования в днях. То вывести предупреждение.
 		Если сумма боев по дням больше чем длительность соревнования в днях. То вывести ошибку.'''
-		if col_meet_days_virtual < deltaday:
+		if meet_days_total < deltaday:
 			print('Предупреждение')
-		elif col_meet_days_virtual > deltaday:
+		elif meet_days_total > deltaday:
 			print('Ошибка')
 			return
 
-		workbook = xlsxwriter.Workbook(re.sub(r'\\', r'', self.name) + '.xlsx')
+		workbook = xlsxwriter.Workbook(self.name.replace("\\", "") + '.xlsx')
+
+		###############################
 		### Список участников по рингам
+		###############################
+
 		ringscount = len(rings)
-		''' количетсво боев на одном ринге в день'''
-		rcd = math.ceil(self.count/ringscount)
+		''' количество боев на одном ринге в день'''
+		fightings_per_day_per_ring = math.ceil(self.fightings_per_day/ringscount)
 		for r in rings:
 			members = database.select('SELECT s.membera, s.memberb, r.ring FROM sortition AS s JOIN ring AS r ON s.ring = r.id WHERE s.idmeet=\'' + id + '\' AND r.id=\'' +str(r[0])+ '\'')
 			day_count = 0
 			current_index_member = 0
 			start_day = datetime.datetime.strptime(self.start, "%Y-%m-%d") #
 			y = 0
-			while day_count < col_meet_days_virtual:
+			while day_count < meet_days_total:
 				worksheet = workbook.add_worksheet(r[1] + str(day_count+1))
 
 				'''# TODO: старт с первой строки'''
@@ -167,7 +174,7 @@ class ListMeetingDialog(QDialog):
 
 				##### Вывести участников по количеству в день
 				i = 0
-				while i < rcd:
+				while i < fightings_per_day_per_ring:
 					if y < len(members):
 						meet = members[y]
 					#for meet in members:
@@ -213,6 +220,7 @@ class ListMeetingDialog(QDialog):
 				worksheet.write_string(row, 1, "судья " + mainclerk[0][1], formatmergeH(row, 'B:B', 'Times New Roman', '12', 'black', False, False, 0, 'left', 'vcenter', 15, 3.7))
 				worksheet.write_string(row, 7, mainclerk[0][2], formatmergeH(row, 'H:H', 'Times New Roman', '12', 'black', False, False, 0, 'left', 'vcenter', 15, 3.7))
 				row += 1
+
 
 		### Судейская бригада
 		meeting = database.select("SELECT name, sdate, edate, city FROM meeting WHERE id=\"" + id + "\"")
