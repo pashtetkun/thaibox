@@ -1,4 +1,3 @@
-import sys, os
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog
@@ -79,9 +78,8 @@ class ListMeetingDialog(QDialog):
 		id = self.ui.tableWidget.item(get_row, 0).text()
 		database = db()
 		self.dbm = dbmanager()
-		#meeting = database.select('SELECT * FROM meeting WHERE id=\'' + id + '\'')
 		meeting = self.dbm.get_meeting(id)
-		rings = database.select('SELECT * FROM ring')
+		rings = self.dbm.get_all_rings()
 		# worksheet.
 		self.name = meeting.name
 		self.start = meeting.start_date
@@ -121,18 +119,18 @@ class ListMeetingDialog(QDialog):
 		###############################
 		### Список участников по рингам
 		###############################
-
+		all_members = self.dbm.get_all_members()
+		weight_categories = self.dbm.get_all_weight_categories()
 		ringscount = len(rings)
 		''' количество боев на одном ринге в день'''
 		fightings_per_day_per_ring = math.ceil(self.fightings_per_day/ringscount)
-		for r in rings:
-			members = database.select('SELECT s.membera, s.memberb, r.ring FROM sortition AS s JOIN ring AS r ON s.ring = r.id WHERE s.idmeet=\'' + id + '\' AND r.id=\'' +str(r[0])+ '\'')
+		for ring in rings:
+			sortitions = self.dbm.get_sortitions_by_meet_and_ring(id, ring.id)
 			day_count = 0
-			current_index_member = 0
 			start_day = datetime.datetime.strptime(self.start, "%Y-%m-%d") #
 			y = 0
 			while day_count < meet_days_total:
-				worksheet = workbook.add_worksheet(r[1] + str(day_count+1))
+				worksheet = workbook.add_worksheet(ring.name + str(day_count+1))
 
 				'''# TODO: старт с первой строки'''
 				row = 1
@@ -144,7 +142,7 @@ class ListMeetingDialog(QDialog):
 				merge_format.set_align('vcenter')
 				worksheet.set_row(row, 40.85)
 				worksheet.merge_range('B2:H2', self.name, merge_format)
-				worksheet.merge_range('I2:J2', r[1], formatmergeH(row, 'I:I', 'Times New Roman', '24', 'black', True,
+				worksheet.merge_range('I2:J2', ring.name, formatmergeH(row, 'I:I', 'Times New Roman', '24', 'black', True,
 																		False, 0, 'center', 'vcenter', 40.85, 3.7))
 				''''# TODO: Ринг вывести '''
 				row += 1 # 2
@@ -175,23 +173,24 @@ class ListMeetingDialog(QDialog):
 				##### Вывести участников по количеству в день
 				i = 0
 				while i < fightings_per_day_per_ring:
-					if y < len(members):
-						meet = members[y]
+					if y < len(sortitions):
+						sortition = sortitions[y]
 					#for meet in members:
 						# print(meet)
-						mema = database.select('SELECT m.fio as fio, m.region, wc.wcategory as weight FROM members AS m JOIN weightcategory AS wc ON m.weight=wc.id WHERE m.id=\'' + str(meet[0]) + '\'')
-						if meet[1] != 0:
-							memb = database.select('SELECT m.fio as fio, m.region, wc.wcategory as weight FROM members AS m JOIN weightcategory AS wc ON m.weight=wc.id WHERE m.id=\'' + str(meet[1]) + '\'')
-						else:
-							memb = 'NULL'
+						member_a = next((m for m in all_members if m.id == sortition.member_a_id), None)
+						member_b = None
+						if sortition.member_b_id:
+							member_b = next((m for m in all_members if m.id == sortition.member_b_id), None)
+						weight_category = next((w for w in weight_categories if w.id == member_a.weight_id), None)
+						
 						worksheet.write_string(row, 1, str(iterator), formatmergeH(row, 'B:B', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
-						worksheet.write_string(row, 2, re.sub(r'\\', r'', mema[0][2]), formatmergeH(row, 'C:C', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
+						worksheet.write_string(row, 2, weight_category.name.replace("\\", ""), formatmergeH(row, 'C:C', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
 						worksheet.write_string(row, 3, str(self.current_meet), formatmergeH(row, 'D:D', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
-						worksheet.write_string(row, 4, re.sub(r'\\', r'', mema[0][0]), formatmergeH(row, 'E:E', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
-						worksheet.write_string(row, 5, re.sub(r'\\', r'', mema[0][1]), formatmergeH(row, 'F:F', 'Times New Roman', '10', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
-						if memb != 'NULL':
-							worksheet.write_string(row, 6, re.sub(r'\\', r'', memb[0][0]), formatmergeH(row, 'G:G', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
-							worksheet.write_string(row, 7, re.sub(r'\\', r'', memb[0][1]), formatmergeH(row, 'H:H', 'Times New Roman', '10', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
+						worksheet.write_string(row, 4, member_a.fio.replace("\\", ""), formatmergeH(row, 'E:E', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
+						worksheet.write_string(row, 5, member_a.region.replace("\\", ""), formatmergeH(row, 'F:F', 'Times New Roman', '10', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
+						if member_b:
+							worksheet.write_string(row, 6, member_b.fio.replace("\\", ""), formatmergeH(row, 'G:G', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
+							worksheet.write_string(row, 7, member_b.region.replace("\\", ""), formatmergeH(row, 'H:H', 'Times New Roman', '10', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
 						else:
 							worksheet.write_string(row, 6, 'Нет участника', formatmergeH(row, 'G:G', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
 							worksheet.write_string(row, 7, '', formatmergeH(row, 'H:H', 'Times New Roman', '10', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
@@ -202,6 +201,8 @@ class ListMeetingDialog(QDialog):
 						self.current_meet += 1
 					i += 1
 					y += 1
+
+
 				day_count += 1
 
 				'''# TODO: Добавить судей и секретаря '''

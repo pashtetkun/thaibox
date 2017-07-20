@@ -93,3 +93,9 @@ class Fighting():
             self.ring = row[5]
             self.winner_id = row[6]
             self.weightcategory_id = row[7]
+
+class Ring():
+    def __init__(self, row=[]):
+        if row:
+            self.id = row[0]
+            self.name = row[1]

@@ -114,3 +114,19 @@ class DbManager():
     def get_version(self):
         row = self.database.select_one('SELECT * FROM version LIMIT 1')
         return Version(row) if row else None
+
+    def get_all_rings(self):
+        rings = []
+        rows = self.database.select("SELECT * FROM ring")
+        for row in rows:
+            rings.append(Ring(row))
+        return rings
+
+    def get_sortitions_by_meet_and_ring(self, meeting_id, ring_id):
+        sortitions = []
+        sql = 'SELECT * FROM sortition WHERE idmeet=? AND ring=?'
+        params = (meeting_id, ring_id, )
+        rows = self.database.select(sql, params)
+        for row in rows:
+            sortitions.append(Sortition(row))
+        return sortitions
