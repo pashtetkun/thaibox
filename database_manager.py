@@ -82,8 +82,8 @@ class DbManager():
         params = (meeting_id,)
         self.database.delete(sql, params)
 
-    def delete_meet_sortition(self, meeting_id):
-        sql = "DELETE FROM sortition WHERE idmeet=?"
+    def delete_fightings_by_meeting(self, meeting_id):
+        sql = "DELETE FROM fightings WHERE meeting=?"
         params = (meeting_id,)
         self.database.delete(sql, params)
 
@@ -104,11 +104,11 @@ class DbManager():
         params = (meet_member.meeting_id, meet_member.member_id, meet_member.is_active)
         self.database.ins_upd(sql, params)
 
-    def insert_sortition(self, sortition):
-        sql = """INSERT INTO sortition(idmeet, membera, memberb, ring, fractional_round, weightcategory_id)
+    def insert_fighting(self, fighting):
+        sql = """INSERT INTO fightings(meeting, membera, memberb, ring, fractional_round, weightcategory_id)
                     VALUES (?, ?, ?, ?, ?, ?)"""
-        params = (sortition.meeting_id, sortition.member_a_id, sortition.member_b_id, sortition.ring,
-                  sortition.fractional_round, sortition.weightcategory_id)
+        params = (fighting.meeting_id, fighting.member_a_id, fighting.member_b_id, fighting.ring,
+                  fighting.fractional_round, fighting.weightcategory_id)
         self.database.ins_upd(sql, params)
 
     def get_version(self):
@@ -122,11 +122,11 @@ class DbManager():
             rings.append(Ring(row))
         return rings
 
-    def get_sortitions_by_meet_and_ring(self, meeting_id, ring_id):
-        sortitions = []
-        sql = 'SELECT * FROM sortition WHERE idmeet=? AND ring=?'
-        params = (meeting_id, ring_id, )
+    def get_fightings_by_meeting(self, meeting_id):
+        fightings = []
+        sql = 'SELECT * FROM fightings WHERE meeting=?'
+        params = (meeting_id, )
         rows = self.database.select(sql, params)
         for row in rows:
-            sortitions.append(Sortition(row))
-        return sortitions
+            fightings.append(Fighting(row))
+        return fightings

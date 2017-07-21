@@ -91,8 +91,8 @@ class ListMeetingDialog(QDialog):
 		self.current_ring = 0
 		self.current_meet = 1
 		#
-		row = database.select('SELECT count(*) FROM sortition WHERE idmeet=\'' + id + '\'')
-		fightings_total = row[0][0] # количество боев в соревновании
+		fightings = self.dbm.get_fightings_by_meeting(id)
+		fightings_total = len(fightings)  # количество боев в соревновании
 		dstart = datetime.datetime.strptime(self.start, "%Y-%m-%d")
 		dend = datetime.datetime.strptime(self.end, "%Y-%m-%d")
 		delta = dend - dstart
@@ -125,14 +125,13 @@ class ListMeetingDialog(QDialog):
 		''' количество боев на одном ринге в день'''
 		fightings_per_day_per_ring = math.ceil(self.fightings_per_day/ringscount)
 		for ring in rings:
-			sortitions = self.dbm.get_sortitions_by_meet_and_ring(id, ring.id)
+			fightings_by_ring = [f for f in fightings if f.ring == ring.id]
 			day_count = 0
 			start_day = datetime.datetime.strptime(self.start, "%Y-%m-%d") #
 			y = 0
 			while day_count < meet_days_total:
 				worksheet = workbook.add_worksheet(ring.name + str(day_count+1))
 
-				#worksheet.set_column(2, 2, 10.0)
 				c_width = 33.7
 				e_width = 37.7
 				f_width = 20.7
@@ -180,14 +179,14 @@ class ListMeetingDialog(QDialog):
 				##### Вывести участников по количеству в день
 				i = 0
 				while i < fightings_per_day_per_ring:
-					if y < len(sortitions):
-						sortition = sortitions[y]
+					if y < len(fightings_by_ring):
+						fighting = fightings_by_ring[y]
 					#for meet in members:
 						# print(meet)
-						member_a = next((m for m in all_members if m.id == sortition.member_a_id), None)
+						member_a = next((m for m in all_members if m.id == fighting.member_a_id), None)
 						member_b = None
-						if sortition.member_b_id:
-							member_b = next((m for m in all_members if m.id == sortition.member_b_id), None)
+						if fighting.member_b_id:
+							member_b = next((m for m in all_members if m.id == fighting.member_b_id), None)
 						weight_category = next((w for w in weight_categories if w.id == member_a.weight_id), None)
 						
 						worksheet.write_string(row, 1, str(iterator), formatmergeH(row, 'B:B', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))

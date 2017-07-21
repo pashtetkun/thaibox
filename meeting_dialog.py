@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QDialog, QListWidgetItem, QMenu, QAction
 from meet import Ui_Dialog as createmeeting
 from database_manager import DbManager as dbmanager
-from models import Meeting, MeetReferee, MeetMember, Sortition
+from models import Meeting, MeetReferee, MeetMember, Fighting
 from validator import Valid
 from input_error_slots import InputErrorSlots
 import random
@@ -55,7 +55,6 @@ class MeetingDialog(QDialog):
 		#
 		self.ring = 1
 		self.meeting = 0
-		#self.meet = meet
 		self.meet = None
 		if meet:
 			self.meet = Meeting(meet)
@@ -373,19 +372,20 @@ class MeetingDialog(QDialog):
 		print("weightcategory: ", wcat.name, "members: ", len(members), "fr_round: ", fractional_round)
 
 		while len(members) > 0:
-			sortition = Sortition()
-			sortition.meeting_id = self.meet.id
-			sortition.ring = self.ring
-			sortition.fractional_round = fractional_round
-			sortition.weightcategory_id = weightcatid
+
+			fighting = Fighting()
+			fighting.meeting_id = self.meet.id
+			fighting.ring = self.ring
+			fighting.fractional_round = fractional_round
+			fighting.weightcategory_id = weightcatid
 
 			if len(members) == 1:
-				sortition.member_a_id = members[0].id
-				sortition.member_b_id = 0
+				fighting.member_a_id = members[0].id
+				fighting.member_b_id = 0
 				members.clear()
 			elif len(members) == 2:
-				sortition.member_a_id = members[0].id
-				sortition.member_b_id = members[1].id
+				fighting.member_a_id = members[0].id
+				fighting.member_b_id = members[1].id
 				members.clear()
 			elif len(members) >= 3:
 				# случайный жребий
@@ -393,10 +393,10 @@ class MeetingDialog(QDialog):
 				members.remove(mem_a)
 				mem_b = random.choice(members)
 				members.remove(mem_b)
-				sortition.member_a_id = mem_a.id
-				sortition.member_b_id = mem_b.id
+				fighting.member_a_id = mem_a.id
+				fighting.member_b_id = mem_b.id
 
-			self.dbm.insert_sortition(sortition)
+			self.dbm.insert_fighting(fighting)
 
 			# TODO: Смена ринга (сделать в форме запрос количества рингов)
 			if self.ui.divrings.isChecked():
@@ -415,7 +415,7 @@ class MeetingDialog(QDialog):
 		if self.meet:
 			self.dbm.delete_meet_member(self.meet.id)
 			self.dbm.delete_meet_referee(self.meet.id)
-			self.dbm.delete_meet_sortition(self.meet.id)
+			self.dbm.delete_fightings_by_meeting(self.meet.id)
 			self.meeting = self.id
 		else:
 			self.meeting = 0
