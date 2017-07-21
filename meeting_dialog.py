@@ -378,10 +378,12 @@ class MeetingDialog(QDialog):
 			fighting.ring = self.ring
 			fighting.fractional_round = fractional_round
 			fighting.weightcategory_id = weightcatid
+			fighting.winner_id = None
 
 			if len(members) == 1:
 				fighting.member_a_id = members[0].id
-				fighting.member_b_id = 0
+				fighting.member_b_id = None
+				fighting.winner_id = members[0].id
 				members.clear()
 			elif len(members) == 2:
 				fighting.member_a_id = members[0].id
@@ -396,13 +398,52 @@ class MeetingDialog(QDialog):
 				fighting.member_a_id = mem_a.id
 				fighting.member_b_id = mem_b.id
 
-			self.dbm.insert_fighting(fighting)
+			try:
+				self.dbm.insert_fighting(fighting)
+			except Exception as e:
+				print(e)
 
 			# TODO: Смена ринга (сделать в форме запрос количества рингов)
 			if self.ui.divrings.isChecked():
 				change_ring()
 
 	def sortition_pressed(self):
+
+		#проверка что можно провести жеребъевку следующего раунда соревнований
+		fightings = self.dbm.get_fightings_by_meeting(self.meet.id)
+		drawing_allow = True
+		if fightings:
+			dict_fightings_by_weight_and_rounds = {}
+			for wcat in self.weight_categories:
+				dict_fightings_by_round = {}
+				fightings_by_weight = [f for f in fightings if f.weightcategory_id == wcat.id]
+				current_fr_round = 999
+				for f in fightings_by_weight:
+					if f.fractional_round not in dict_fightings_by_round:
+						dict_fightings_by_round[f.fractional_round] = [f]
+					else:
+						dict_fightings_by_round[f.fractional_round].append(f)
+
+					if f.fractional_round < current_fr_round:
+						current_fr_round = f.fractional_round
+
+				#после финала - не нужна дальнейшая жеребьевка
+				if current_fr_round == 1:
+					continue
+
+				dict_fightings_by_weight_and_rounds[wcat.id] = dict_fightings_by_round
+				fightings_by_round = dict_fightings_by_round.get(current_fr_round, [])
+				if fightings_by_round:
+					not_defined_winners = [f for f in fightings_by_round if f.winner_id == None]
+					if not_defined_winners:
+						print("Не указаны все проигравшие в ", wcat.name, ", раунд: 1/%d" % current_fr_round)
+						drawing_allow = False
+						break
+
+		if not drawing_allow:
+			return
+
+		print("проверка доступности жеребьевки пройдена!")
 
 		'''# TODO: 1. Создать запись о соревновании '''
 		'''# TODO: 2. Заполнить таблицу участников основываясь на ID созданного соревнования и ID участника'''

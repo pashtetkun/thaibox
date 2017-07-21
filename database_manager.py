@@ -105,10 +105,10 @@ class DbManager():
         self.database.ins_upd(sql, params)
 
     def insert_fighting(self, fighting):
-        sql = """INSERT INTO fightings(meeting, membera, memberb, ring, fractional_round, weightcategory_id)
-                    VALUES (?, ?, ?, ?, ?, ?)"""
+        sql = """INSERT INTO fightings(meeting, membera, memberb, ring, fractional_round, weightcategory_id, winner)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)"""
         params = (fighting.meeting_id, fighting.member_a_id, fighting.member_b_id, fighting.ring,
-                  fighting.fractional_round, fighting.weightcategory_id)
+                  fighting.fractional_round, fighting.weightcategory_id, fighting.winner_id)
         self.database.ins_upd(sql, params)
 
     def get_version(self):
