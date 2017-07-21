@@ -132,28 +132,35 @@ class ListMeetingDialog(QDialog):
 			while day_count < meet_days_total:
 				worksheet = workbook.add_worksheet(ring.name + str(day_count+1))
 
+				#worksheet.set_column(2, 2, 10.0)
+				c_width = 33.7
+				e_width = 37.7
+				f_width = 20.7
+				g_width = 33.7
+				h_width = 20.7
+				i_width = 10.7
+				j_width = 10.7
+
 				'''# TODO: старт с первой строки'''
 				row = 1
 				col = 1
 
 				'''# TODO: Название'''
-				merge_format = workbook.add_format({'font_name':'Times New Roman', 'font_size':'16', 'bold': True})
-				merge_format.set_align('center')
-				merge_format.set_align('vcenter')
+				format_title = workbook.add_format({'font_name':'Times New Roman', 'font_size':'16', 'bold': True,
+													'align': 'center', 'valign': 'vcenter'})
 				worksheet.set_row(row, 40.85)
-				worksheet.merge_range('B2:H2', self.name, merge_format)
+				worksheet.merge_range('B2:H2', self.name, format_title)
 				worksheet.merge_range('I2:J2', ring.name, formatmergeH(row, 'I:I', 'Times New Roman', '24', 'black', True,
-																		False, 0, 'center', 'vcenter', 40.85, 3.7))
+																		False, 0, 'center', 'vcenter', 40.85, i_width))
 				''''# TODO: Ринг вывести '''
 				row += 1 # 2
-				format = workbook.add_format({'font_name':'Times New Roman', 'font_size':'16', 'bold': True})
+				format_ring = workbook.add_format({'font_name':'Times New Roman', 'font_size':'16', 'bold': True})
 				current_day = start_day + datetime.timedelta(days=day_count)
-				worksheet.write_string(row, col, self.city + ", " + datetime.datetime.strftime(current_day, "%d %B %Y"), format)
-				merge_format = workbook.add_format({'font_name':'Times New Roman', 'font_size':'16', 'bold': True})
-				merge_format.set_align('right')
-				merge_format.set_align('vcenter')
+				worksheet.write_string(row, col, self.city + ", " + datetime.datetime.strftime(current_day, "%d %B %Y"), format_ring)
+				format_time = workbook.add_format({'font_name': 'Times New Roman', 'font_size': '16', 'bold': True,
+													'align': 'right', 'valign': 'vcenter'})
 				worksheet.set_row(row, 22)
-				worksheet.merge_range('I3:J3', 'Время начала', merge_format)
+				worksheet.merge_range('I3:J3', 'Время начала', format_time)
 				row += 1 # 3
 				worksheet.merge_range('B4:B5', '№ п/п', formatmergeV(row, 'B:B', 'Times New Roman', '12', 'black', True, False, 90, 'center', 'vcenter', 22, 3.7))
 				worksheet.merge_range('C4:C5', 'Категория', formatmergeV(row, 'C:C', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 22, 5.7))
@@ -165,7 +172,7 @@ class ListMeetingDialog(QDialog):
 				worksheet.write_string(row, 5, 'Субъект', formatmergeH(row, 'F:F', 'Times New Roman', '14', 'black', True, False, 0, 'center', 'vcenter', 22, 3.7))
 				worksheet.write_string(row, 6, 'ФИО', formatmergeH(row, 'E:E', 'Times New Roman', '14', 'black', True, False, 0, 'center', 'vcenter', 22, 3.7))
 				worksheet.write_string(row, 7, 'Субъект', formatmergeH(row, 'F:F', 'Times New Roman', '14', 'black', True, False, 0, 'center', 'vcenter', 22, 3.7))
-				worksheet.merge_range('I4:J5', 'Результат', formatmergeV(row, 'I:I', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 22, 5.7))
+				worksheet.merge_range('I4:J5', 'Результат', formatmergeV(row, 'I:I', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 22, i_width))
 				#worksheet.write(row, col+1, self.start)
 				row += 1 #6
 				iterator = 1
@@ -184,17 +191,17 @@ class ListMeetingDialog(QDialog):
 						weight_category = next((w for w in weight_categories if w.id == member_a.weight_id), None)
 						
 						worksheet.write_string(row, 1, str(iterator), formatmergeH(row, 'B:B', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
-						worksheet.write_string(row, 2, weight_category.name.replace("\\", ""), formatmergeH(row, 'C:C', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
+						worksheet.write_string(row, 2, weight_category.name.replace("\\", ""), formatmergeH(row, 'C:C', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, c_width))
 						worksheet.write_string(row, 3, str(self.current_meet), formatmergeH(row, 'D:D', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
-						worksheet.write_string(row, 4, member_a.fio.replace("\\", ""), formatmergeH(row, 'E:E', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
-						worksheet.write_string(row, 5, member_a.region.replace("\\", ""), formatmergeH(row, 'F:F', 'Times New Roman', '10', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
+						worksheet.write_string(row, 4, member_a.fio.replace("\\", ""), formatmergeH(row, 'E:E', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, e_width))
+						worksheet.write_string(row, 5, member_a.region.replace("\\", ""), formatmergeH(row, 'F:F', 'Times New Roman', '10', 'black', True, False, 0, 'center', 'vcenter', 33, f_width))
 						if member_b:
-							worksheet.write_string(row, 6, member_b.fio.replace("\\", ""), formatmergeH(row, 'G:G', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
-							worksheet.write_string(row, 7, member_b.region.replace("\\", ""), formatmergeH(row, 'H:H', 'Times New Roman', '10', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
+							worksheet.write_string(row, 6, member_b.fio.replace("\\", ""), formatmergeH(row, 'G:G', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, g_width))
+							worksheet.write_string(row, 7, member_b.region.replace("\\", ""), formatmergeH(row, 'H:H', 'Times New Roman', '10', 'black', True, False, 0, 'center', 'vcenter', 33, h_width))
 						else:
-							worksheet.write_string(row, 6, 'Нет участника', formatmergeH(row, 'G:G', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
-							worksheet.write_string(row, 7, '', formatmergeH(row, 'H:H', 'Times New Roman', '10', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
-						worksheet.merge_range('I'+str(row)+':J'+str(row), '', formatmergeH(row, 'I:J', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 5.7))
+							worksheet.write_string(row, 6, 'Нет участника', formatmergeH(row, 'G:G', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, g_width))
+							worksheet.write_string(row, 7, ' ', formatmergeH(row, 'H:H', 'Times New Roman', '10', 'black', True, False, 0, 'center', 'vcenter', 33, h_width))
+						worksheet.merge_range('I'+str(row)+':J'+str(row), '', formatmergeH(row, 'I:J', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, i_width))
 
 						row += 1
 						iterator += 1
@@ -210,16 +217,16 @@ class ListMeetingDialog(QDialog):
 				mainclerk = database.select('SELECT r.fio, rf.category, rg.region FROM referee as r LEFT JOIN refereecat AS rf ON r.category=rf.id LEFT JOIN region AS rg ON r.region=rg.id WHERE r.id=\'' + str(self.mainclerk) + '\'')
 				row += 1
 				worksheet.write_string(row, 1, "Главный судья,", formatmergeH(row, 'B:B', 'Times New Roman', '12', 'black', True, False, 0, 'left', 'vcenter', 15, 3.7))
-				worksheet.write_string(row, 7, mainreferee[0][0], formatmergeH(row, 'H:H', 'Times New Roman', '12', 'black', True, False, 0, 'left', 'vcenter', 15, 3.7))
+				worksheet.write_string(row, 7, mainreferee[0][0], formatmergeH(row, 'H:H', 'Times New Roman', '12', 'black', True, False, 0, 'left', 'vcenter', 15, h_width))
 				row += 1
 				worksheet.write_string(row, 1, "судья " + mainreferee[0][1], formatmergeH(row, 'B:B', 'Times New Roman', '12', 'black', False, False, 0, 'left', 'vcenter', 15, 3.7))
-				worksheet.write_string(row, 7, mainreferee[0][2], formatmergeH(row, 'H:H', 'Times New Roman', '12', 'black', False, False, 0, 'left', 'vcenter', 15, 3.7))
+				worksheet.write_string(row, 7, mainreferee[0][2], formatmergeH(row, 'H:H', 'Times New Roman', '12', 'black', False, False, 0, 'left', 'vcenter', 15, h_width))
 				row += 1
 				worksheet.write_string(row, 1, "Главный секретарь,", formatmergeH(row, 'B:B', 'Times New Roman', '12', 'black', True, False, 0, 'left', 'vcenter', 15, 3.7))
-				worksheet.write_string(row, 7, mainclerk[0][0], formatmergeH(row, 'H:H', 'Times New Roman', '12', 'black', True, False, 0, 'left', 'vcenter', 15, 3.7))
+				worksheet.write_string(row, 7, mainclerk[0][0], formatmergeH(row, 'H:H', 'Times New Roman', '12', 'black', True, False, 0, 'left', 'vcenter', 15, h_width))
 				row += 1
 				worksheet.write_string(row, 1, "судья " + mainclerk[0][1], formatmergeH(row, 'B:B', 'Times New Roman', '12', 'black', False, False, 0, 'left', 'vcenter', 15, 3.7))
-				worksheet.write_string(row, 7, mainclerk[0][2], formatmergeH(row, 'H:H', 'Times New Roman', '12', 'black', False, False, 0, 'left', 'vcenter', 15, 3.7))
+				worksheet.write_string(row, 7, mainclerk[0][2], formatmergeH(row, 'H:H', 'Times New Roman', '12', 'black', False, False, 0, 'left', 'vcenter', 15, h_width))
 				row += 1
 
 
