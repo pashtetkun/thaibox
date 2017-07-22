@@ -54,7 +54,7 @@ class DbManager():
         rows = self.database.select(sql, params)
         for row in rows:
             member = Member(row)
-            member.is_active = row[-1]
+            #member.is_active = row[-1]
             members.append(member)
         return members
 
@@ -100,15 +100,22 @@ class DbManager():
         return self.get_meeting(id)
 
     def insert_meet_member(self, meet_member):
-        sql = """INSERT INTO meetmembers(meeting, members, is_active) VALUES (?, ?, ?)"""
-        params = (meet_member.meeting_id, meet_member.member_id, meet_member.is_active)
+        sql = """INSERT INTO meetmembers(meeting, members) VALUES (?, ?)"""
+        params = (meet_member.meeting_id, meet_member.member_id)
         self.database.ins_upd(sql, params)
 
     def insert_fighting(self, fighting):
-        sql = """INSERT INTO fightings(meeting, membera, memberb, ring, fractional_round, weightcategory_id, winner)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)"""
+        sql = """INSERT INTO fightings(meeting, membera, memberb, ring, fractional_round, weightcategory_id, winner, loser)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
         params = (fighting.meeting_id, fighting.member_a_id, fighting.member_b_id, fighting.ring,
-                  fighting.fractional_round, fighting.weightcategory_id, fighting.winner_id)
+                  fighting.fractional_round, fighting.weightcategory_id, fighting.winner_id, fighting.loser_id)
+        self.database.ins_upd(sql, params)
+
+    def set_fighting_result(self, fighting_id, winner_id, loser_id):
+        sql = """UPDATE fightings
+                         SET winner=?, loser=? 
+                         WHERE id=?"""
+        params = (winner_id, loser_id, fighting_id)
         self.database.ins_upd(sql, params)
 
     def get_version(self):
@@ -130,3 +137,9 @@ class DbManager():
         for row in rows:
             fightings.append(Fighting(row))
         return fightings
+
+    def get_count_fightings_by_meeting(self, meeting_id):
+        sql = 'SELECT count(*) FROM fightings WHERE meeting=?'
+        params = (meeting_id, )
+        row = self.database.select_one(sql, params)
+        return row[0] if row else 0

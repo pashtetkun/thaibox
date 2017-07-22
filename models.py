@@ -1,4 +1,23 @@
 
+from enum import Enum
+
+
+class MemberStatus(Enum):
+    #статусы в текущем раунде
+    MEMBER = 1
+    WINNER = 2
+    LOSER = 3
+    #выбыл ранее
+    WITHDRAW = 4
+
+
+#класс, описывающий бои в указанном весе
+class FightingsInWeigth():
+    def __init__(self, weight_category, current_fr_round, fightings_by_round):
+        self.weight_category = weight_category
+        self.current_fr_round = current_fr_round
+        self.fightings_by_round = fightings_by_round
+
 
 class Member():
 
@@ -13,7 +32,7 @@ class Member():
         self.region = row[7]
         self.city = row[8]
         self.trainer = row[9]
-        self.is_active = True
+        self.status = True
 
 
 class Referee():
@@ -50,7 +69,7 @@ class MeetMember():
             self.id = row[0]
             self.meeting_id = row[1]
             self.member_id = row[2]
-            self.is_active = row[3]
+            #self.is_active = row[3]
 
 
 class MeetReferee():
@@ -78,7 +97,8 @@ class Fighting():
             self.member_b_id = row[4]
             self.ring = row[5]
             self.winner_id = row[6]
-            self.weightcategory_id = row[7]
+            self.loser_id = row[7]
+            self.weightcategory_id = row[8]
 
 class Ring():
     def __init__(self, row=[]):

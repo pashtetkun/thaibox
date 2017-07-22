@@ -9,7 +9,7 @@ from starting import Ui_dialog as insdata
 import re
 
 
-CURRENT_VERSION = 4
+CURRENT_VERSION = 5
 
 class CreateBase(QDialog):
 	def __init__(self):
@@ -149,7 +149,7 @@ class Dbase():
 		ring = "CREATE TABLE ring (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, ring CHAR (255));"
 		weightcategory = "CREATE TABLE weightcategory (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, wcategory CHAR (255) UNIQUE);"
 		meeting = "CREATE TABLE meeting (id INTEGER PRIMARY KEY ASC AUTOINCREMENT, name CHAR (254), sdate DATE, edate DATE, city CHAR (254), meetcount INTEGER (3), mainreferee INTEGER REFERENCES referee (id), mainclerk INTEGER REFERENCES referee (id));"
-		meetmembers = "CREATE TABLE meetmembers (id INTEGER PRIMARY KEY ASC AUTOINCREMENT, meeting INTEGER REFERENCES meeting (id), members INTEGER REFERENCES members (id), is_active INTEGER(1) DEFAULT(0));"
+		meetmembers = "CREATE TABLE meetmembers (id INTEGER PRIMARY KEY ASC AUTOINCREMENT, meeting INTEGER REFERENCES meeting (id), members INTEGER REFERENCES members (id));"
 		meetreferees = "CREATE TABLE meetreferees (id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, meeting INTEGER REFERENCES meeting (id), referee INTEGER REFERENCES referee (id));"
 		sortition = """CREATE TABLE sortition 
 						(id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, 
@@ -171,6 +171,7 @@ class Dbase():
 						memberb INTEGER (9) REFERENCES members (id), 
 						ring INTEGER (2) REFERENCES ring (id),
 						winner INTEGER (9) REFERENCES members (id),
+						loser INTEGER (9) REFERENCES members (id),
 						weightcategory_id INTEGER (9) REFERENCES weightcategory (id));"""
 		self.cursor.execute(referee)
 		self.cursor.execute(refereecat)
@@ -432,6 +433,24 @@ class Dbase():
 				self.cursor.execute("""UPDATE version SET version=%d WHERE id=%d""" % (4, id))
 				self.connection.commit()
 				version = 4
+			# 4 --> 5 добавлено поле с проигравшим fightings.loser(принудительное удаление старых данных)
+			if version == 4:
+				self.cursor.execute("""DROP TABLE fightings""")
+				self.connection.commit()
+				self.cursor.execute("""CREATE TABLE fightings 
+							    						(id INTEGER PRIMARY KEY ASC AUTOINCREMENT UNIQUE, 
+							    						meeting INTEGER (9) REFERENCES meeting (id),
+							    						fractional_round INTEGER (9) NOT NULL,
+							    						membera INTEGER (9) REFERENCES members (id) NOT NULL, 
+							    						memberb INTEGER (9) REFERENCES members (id), 
+							    						ring INTEGER (2) REFERENCES ring (id),
+							    						winner INTEGER (9) REFERENCES members (id),
+							    						loser INTEGER (9) REFERENCES members (id),
+							    						weightcategory_id INTEGER (9) REFERENCES weightcategory (id))""")
+				self.connection.commit()
+				self.cursor.execute("""UPDATE version SET version=%d WHERE id=%d""" % (5, id))
+				self.connection.commit()
+				version = 5
 
 			print("Обновление успешно завершено")
 
