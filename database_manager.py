@@ -77,9 +77,14 @@ class DbManager():
         params = (meet_referee.meeting_id, meet_referee.referee_id)
         self.database.ins_upd(sql, params)
 
-    def delete_meet_member(self, meeting_id):
+    def delete_meet_members(self, meeting_id):
         sql = "DELETE FROM meetmembers WHERE meeting=?"
         params = (meeting_id,)
+        self.database.delete(sql, params)
+
+    def delete_meet_member(self, meeting_id, member_id):
+        sql = "DELETE FROM meetmembers WHERE meeting=? AND members=?"
+        params = (meeting_id, member_id)
         self.database.delete(sql, params)
 
     def delete_fightings_by_meeting(self, meeting_id):

@@ -162,9 +162,9 @@ class MeetingDialog(QDialog):
 					#бой участника в текущем раунде
 					fighting = next((f for f in fs if f.member_a_id == member.id or f.member_b_id == member.id), None)
 					if fighting:
-						if fighting.winner == member.id:
+						if fighting.winner_id == member.id:
 							status = MemberStatus.WINNER
-						if fighting.loser == member.id:
+						if fighting.loser_id == member.id:
 							status = MemberStatus.LOSER
 					else:
 						status = MemberStatus.WITHDRAW
@@ -282,6 +282,14 @@ class MeetingDialog(QDialog):
 		if not item:
 			return
 		member = item.data(QtCore.Qt.UserRole)
+
+		if self.meet:
+		    meet_member = MeetMember()
+		    meet_member.meeting_id = self.meet.id
+		    meet_member.member_id = member.id
+		    meet_member.status = MemberStatus.MEMBER
+		    self.dbm.insert_meet_member(meet_member)
+
 		self.not_meet_members.remove(member)
 		self.not_meet_members.sort(key=operator.attrgetter("fio"), reverse=False)
 		self.meet_members.append(member)
@@ -298,6 +306,10 @@ class MeetingDialog(QDialog):
 		if not item:
 			return
 		member = item.data(QtCore.Qt.UserRole)
+
+		if self.meet:
+		    self.dbm.delete_meet_member(self.meet.id, member.id)
+
 		self.meet_members.remove(member)
 		self.meet_members.sort(key=operator.attrgetter("fio"), reverse=False)
 		self.not_meet_members.append(member)
@@ -503,7 +515,7 @@ class MeetingDialog(QDialog):
 		if not drawing_allow:
 			return
 
-		count_f = self.dbm.get_count_fightings_by_meeting(self.meet.id)
+		#count_f = self.dbm.get_count_fightings_by_meeting(self.meet.id)
 
 		print("проверка доступности жеребьевки пройдена!")
 
@@ -518,8 +530,8 @@ class MeetingDialog(QDialog):
 		if self.meet:
 			self.dbm.delete_meet_referee(self.meet.id)
 			#удаляем только если еще не было боёв
-			if not count_f:
-			    self.dbm.delete_meet_member(self.meet.id)
+			#if not count_f:
+			    #self.dbm.delete_meet_member(self.meet.id)
 				#провести пережеребьевку текущего раунда ???
 			    #self.dbm.delete_fightings_by_meeting(self.meet.id)
 			self.meeting = self.id
@@ -547,13 +559,15 @@ class MeetingDialog(QDialog):
 			self.meet = self.dbm.insert_meeting(self.meet)
 
 		#сохраняем участников - только если еще не было жеребьевки вообще
-		if count_f:
-		    for member in self.meet_members:
-			    meet_member = MeetMember()
-			    meet_member.meeting_id = self.meet.id
-			    meet_member.member_id = member.id
-			    meet_member.status = MemberStatus.MEMBER
-			    self.dbm.insert_meet_member(meet_member)
+
+		#if count_f:
+		#    for member in self.meet_members:
+		#	    meet_member = MeetMember()
+		#	    meet_member.meeting_id = self.meet.id
+		#	    meet_member.member_id = member.id
+		#	    meet_member.status = MemberStatus.MEMBER
+		#	    self.dbm.insert_meet_member(meet_member)
+
 
 		#разбираем по весовым категориям
 		for member in self.meet_members:
@@ -620,8 +634,18 @@ class MeetingDialog(QDialog):
 
 		f_in_w = self.dict_fightings_in_weights[member.weight_id]
 		current_fr_round = f_in_w.current_fr_round
-		#f_in_w
-		#self.dbm.set_fighting_result()
+		f_by_r = f_in_w.fightings_by_round
+		fs = f_by_r[current_fr_round]
+		fighting = next((f for f in fs if f.member_a_id == member.id or f.member_b_id == member.id), None)
+		winner_id = None
+		loser_id = None
+		if member_status == MemberStatus.WINNER:
+			winner_id = member.id
+			loser_id = fighting.loser_id
+		if member_status == MemberStatus.LOSER:
+			winner_id = fighting.loser_id
+			loser_id = member.id
+		self.dbm.set_fighting_result(fighting.id, winner_id, loser_id)
 
 		self.set_item_background(current_item, member_status)
 		self.memberListItem_pressed(current_item)
