@@ -42,8 +42,8 @@ class MeetingDialog(QDialog):
 		self.id = 0
 		self.ui = CreateMeetingSlots()
 		self.ui.setupUi(self)
-		self.ui.addButton.clicked.connect(self.add_pressed)
-		self.ui.removeButton.clicked.connect(self.remove_pressed)
+		self.ui.addButton.clicked.connect(self.add_member_pressed)
+		self.ui.removeButton.clicked.connect(self.remove_member_pressed)
 		self.ui.raddButton.clicked.connect(self.radd_pressed)
 		self.ui.rremoveButton.clicked.connect(self.rremove_pressed)
 		# self.ui.refShedule.clicked.connect(self.refshed_pressed)
@@ -82,6 +82,11 @@ class MeetingDialog(QDialog):
 		except Exception as e:
 			print(e)
 
+		count_f = self.fighting_service.get_fightings_count()
+		if count_f:
+			self.ui.addButton.setEnabled(False)
+			self.ui.removeButton.setEnabled(False)
+
 		self.initialize = True
 
 		self.ui.weightcatCBox.setCurrentIndex(-1)
@@ -108,25 +113,6 @@ class MeetingDialog(QDialog):
 		self.referees.sort(key=operator.attrgetter("fio"), reverse=False)
 		self.weight_categories = self.dbm.get_all_weight_categories()
 
-		'''
-		fightings = self.dbm.get_fightings_by_meeting(self.meet.id)
-		for wcat in self.weight_categories:
-			dict_fightings_by_round = {}
-			fightings_by_weight = [f for f in fightings if f.weightcategory_id == wcat.id]
-			current_fr_round = 999
-			for f in fightings_by_weight:
-				if f.fractional_round not in dict_fightings_by_round:
-					dict_fightings_by_round[f.fractional_round] = [f]
-				else:
-					dict_fightings_by_round[f.fractional_round].append(f)
-
-				if f.fractional_round < current_fr_round:
-					current_fr_round = f.fractional_round
-
-			#self.dict_fightings_in_weights[wcat.id] = dict_fightings_by_round
-			self.fightings_info[wcat.id] = FightingsInWeigth(wcat, current_fr_round, dict_fightings_by_round)
-		'''
-		#self.fightings_info = self.fighting_service.get_fightings_info(self.meet.id)
 		self.fightings_info = self.fighting_service.fightings_info
 
 		self.fill_comboboxes()
@@ -158,26 +144,8 @@ class MeetingDialog(QDialog):
 			mems_in_meet_ids = [member.id for member in self.meet_members]
 			#для участников определяем их текущие статусы
 			for member in self.meet_members:
-				'''
-				status = MemberStatus.MEMBER
-				fightings_in_weight = self.fightings_info[member.weight_id]
-				current_fr_round = fightings_in_weight.current_fr_round
-				fightings_by_round = fightings_in_weight.fightings_by_round
-				if current_fr_round in fightings_by_round:
-					fs = fightings_by_round[current_fr_round]
-					#бой участника в текущем раунде
-					fighting = next((f for f in fs if f.member_a_id == member.id or f.member_b_id == member.id), None)
-					if fighting:
-						if fighting.winner_id == member.id:
-							status = MemberStatus.WINNER
-						if fighting.loser_id == member.id:
-							status = MemberStatus.LOSER
-					else:
-						status = MemberStatus.WITHDRAW
-				'''
 				status = self.fighting_service.get_member_status(member)
 				member.status = status
-
 
 		else:
 			self.setWindowTitle("Создание соревнования")
@@ -280,7 +248,7 @@ class MeetingDialog(QDialog):
 
 		return True
 
-	def add_pressed(self):
+	def add_member_pressed(self):
 
 		if self.meet:
 			self.ui.wsortitionButton.setEnabled(False)
@@ -304,7 +272,7 @@ class MeetingDialog(QDialog):
 		self.refresh_members_list()
 		self.refresh_athletes_list()
 
-	def remove_pressed(self):
+	def remove_member_pressed(self):
 
 		if self.meet:
 			self.ui.wsortitionButton.setEnabled(False)
@@ -518,17 +486,6 @@ class MeetingDialog(QDialog):
 		else:
 			self.meet = self.dbm.insert_meeting(self.meet)
 
-		#сохраняем участников - только если еще не было жеребьевки вообще
-
-		#if count_f:
-		#    for member in self.meet_members:
-		#	    meet_member = MeetMember()
-		#	    meet_member.meeting_id = self.meet.id
-		#	    meet_member.member_id = member.id
-		#	    meet_member.status = MemberStatus.MEMBER
-		#	    self.dbm.insert_meet_member(meet_member)
-
-
 		#разбираем по весовым категориям
 		for member in self.meet_members:
 			#для жеребьевки отбираем только активных участников
@@ -575,7 +532,8 @@ class MeetingDialog(QDialog):
 
 		#доступность пунктов меню
 		#если боев вообще нет, то и меню недоступны
-		count_f = self.dbm.get_count_fightings_by_meeting(self.meet.id)
+		#count_f = self.dbm.get_count_fightings_by_meeting(self.meet.id)
+		count_f = self.fighting_service.get_fightings_count()
 		if not count_f:
 			actionSetWin.setEnabled(False)
 			actionSetLose.setEnabled(False)
@@ -591,7 +549,7 @@ class MeetingDialog(QDialog):
 		member = current_item.data(QtCore.Qt.UserRole)
 
 		member.status = member_status
-
+		'''
 		f_in_w = self.fightings_info[member.weight_id]
 		current_fr_round = f_in_w.current_fr_round
 		f_by_r = f_in_w.fightings_by_round
@@ -606,16 +564,18 @@ class MeetingDialog(QDialog):
 			winner_id = fighting.loser_id
 			loser_id = member.id
 		self.dbm.set_fighting_result(fighting.id, winner_id, loser_id)
-
+		'''
+		fighting = self.fighting_service.get_fighting(member)
+		self.fighting_service.set_fighting_result(member, member_status)
 		self.set_item_background(current_item, member_status)
 		self.memberListItem_pressed(current_item)
 
 	def memberListItem_pressed(self, item):
 		member = item.data(QtCore.Qt.UserRole)
-		self.ui.removeButton.setEnabled(member.status != MemberStatus.WITHDRAW)
+		#self.ui.removeButton.setEnabled(member.status != MemberStatus.WITHDRAW)
 
 	def set_item_background(self, item, member_status):
-		member = item.data(QtCore.Qt.UserRole)
+		#member = item.data(QtCore.Qt.UserRole)
 		background = "white"
 		if member_status == MemberStatus.WINNER:
 			background = "green"

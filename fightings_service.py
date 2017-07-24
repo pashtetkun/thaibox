@@ -19,6 +19,7 @@ class FightingsService():
             fightings_by_round = {}
             fightings_by_weight = [f for f in fightings if f.weightcategory_id == wcat.id]
             current_fr_round = 999
+            #fightings_by_round[current_fr_round] = []
             for f in fightings_by_weight:
                 if f.fractional_round not in fightings_by_round:
                     fightings_by_round[f.fractional_round] = [f]
@@ -73,3 +74,34 @@ class FightingsService():
                 drawing_allow = False
                 break
         return drawing_allow
+
+    #возвращает число боёв
+    def get_fightings_count(self):
+        count = 0
+        for wcat_id in self.fightings_info:
+            for round, fightings in self.fightings_info[wcat_id].fightings_by_round.items():
+                count += len(fightings)
+        return count
+
+    #вернуть бой участника в текущем раунде
+    def get_fighting(self, member):
+        f_in_w = self.fightings_info[member.weight_id]
+        current_fr_round = f_in_w.current_fr_round
+        f_by_r = f_in_w.fightings_by_round
+        fs = f_by_r[current_fr_round]
+        fighting = next((f for f in fs if f.member_a_id == member.id or f.member_b_id == member.id), None)
+        return fighting
+
+    #установить результат боя
+    def set_fighting_result(self, member, member_status):
+        fighting = self.get_fighting(member)
+        winner_id = None
+        loser_id = None
+        if member_status == MemberStatus.WINNER:
+            winner_id = member.id
+            loser_id = fighting.loser_id
+        if member_status == MemberStatus.LOSER:
+            winner_id = fighting.loser_id
+            loser_id = member.id
+        self.dbm.set_fighting_result(fighting.id, winner_id, loser_id)
+
