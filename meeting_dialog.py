@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QDialog, QListWidgetItem, QMenu, QAction
 from meet import Ui_Dialog as createmeeting
 from database_manager import DbManager as dbmanager
 from models import Meeting, MeetReferee, MeetMember, Fighting, MemberStatus, FightingsInWeigth
+from fightings_service import FightingsService
 from validator import Valid
 from input_error_slots import InputErrorSlots
 import random
@@ -72,8 +73,9 @@ class MeetingDialog(QDialog):
 		self.main_referee = None
 		self.main_clerk = None
 
+		self.fighting_service = FightingsService(self.meet.id)
 		#словарь боёв {weightcat_id : FightingsInWeight}
-		self.dict_fightings_in_weights = {}
+		self.fightings_info = {}
 
 		try:
 			self.fill_data()
@@ -106,6 +108,7 @@ class MeetingDialog(QDialog):
 		self.referees.sort(key=operator.attrgetter("fio"), reverse=False)
 		self.weight_categories = self.dbm.get_all_weight_categories()
 
+		'''
 		fightings = self.dbm.get_fightings_by_meeting(self.meet.id)
 		for wcat in self.weight_categories:
 			dict_fightings_by_round = {}
@@ -121,8 +124,10 @@ class MeetingDialog(QDialog):
 					current_fr_round = f.fractional_round
 
 			#self.dict_fightings_in_weights[wcat.id] = dict_fightings_by_round
-			self.dict_fightings_in_weights[wcat.id] = FightingsInWeigth(wcat, current_fr_round, dict_fightings_by_round)
-
+			self.fightings_info[wcat.id] = FightingsInWeigth(wcat, current_fr_round, dict_fightings_by_round)
+		'''
+		#self.fightings_info = self.fighting_service.get_fightings_info(self.meet.id)
+		self.fightings_info = self.fighting_service.fightings_info
 
 		self.fill_comboboxes()
 
@@ -153,8 +158,9 @@ class MeetingDialog(QDialog):
 			mems_in_meet_ids = [member.id for member in self.meet_members]
 			#для участников определяем их текущие статусы
 			for member in self.meet_members:
+				'''
 				status = MemberStatus.MEMBER
-				fightings_in_weight = self.dict_fightings_in_weights[member.weight_id]
+				fightings_in_weight = self.fightings_info[member.weight_id]
 				current_fr_round = fightings_in_weight.current_fr_round
 				fightings_by_round = fightings_in_weight.fightings_by_round
 				if current_fr_round in fightings_by_round:
@@ -168,7 +174,8 @@ class MeetingDialog(QDialog):
 							status = MemberStatus.LOSER
 					else:
 						status = MemberStatus.WITHDRAW
-
+				'''
+				status = self.fighting_service.get_member_status(member)
 				member.status = status
 
 
@@ -467,55 +474,8 @@ class MeetingDialog(QDialog):
 	def sortition_pressed(self):
 
 		#проверка что можно провести жеребъевку следующего раунда соревнований
-		#fightings = self.dbm.get_fightings_by_meeting(self.meet.id)
-		drawing_allow = True
-		#if fightings:
-			#dict_fightings_by_weight_and_rounds = {}
-		for wcat_id in self.dict_fightings_in_weights:
-			fightings_in_weight = self.dict_fightings_in_weights[wcat_id]
-			current_fr_round = fightings_in_weight.current_fr_round
-			#еще не было жеребьевки
-			if current_fr_round == 999:
-				continue
-			# после финала - не нужна дальнейшая жеребьевка
-			if current_fr_round == 1:
-				continue
-
-			not_defined_winners = [f for f in fightings_in_weight.fightings_by_round[current_fr_round] if f.winner_id == None]
-			if not_defined_winners:
-				print("Не указаны все проигравшие в ", fightings_in_weight.weight_category.name, ", раунд: 1/%d" % current_fr_round)
-				drawing_allow = False
-				break
-			#for wcat in self.weight_categories:
-				#dict_fightings_by_round = {}
-				#fightings_by_weight = [f for f in fightings if f.weightcategory_id == wcat.id]
-				#current_fr_round = 999
-				#for f in fightings_by_weight:
-					#if f.fractional_round not in dict_fightings_by_round:
-						#dict_fightings_by_round[f.fractional_round] = [f]
-					#else:
-						#dict_fightings_by_round[f.fractional_round].append(f)
-
-					#if f.fractional_round < current_fr_round:
-						#current_fr_round = f.fractional_round
-
-				#после финала - не нужна дальнейшая жеребьевка
-				#if current_fr_round == 1:
-					#continue
-
-				#dict_fightings_by_weight_and_rounds[wcat.id] = dict_fightings_by_round
-				#fightings_by_round = dict_fightings_by_round.get(current_fr_round, [])
-				#if fightings_by_round:
-					#not_defined_winners = [f for f in fightings_by_round if f.winner_id == None]
-					#if not_defined_winners:
-						#print("Не указаны все проигравшие в ", wcat.name, ", раунд: 1/%d" % current_fr_round)
-						#drawing_allow = False
-						#break
-
-		if not drawing_allow:
+		if not self.fighting_service.is_drawing_allow():
 			return
-
-		#count_f = self.dbm.get_count_fightings_by_meeting(self.meet.id)
 
 		print("проверка доступности жеребьевки пройдена!")
 
@@ -632,7 +592,7 @@ class MeetingDialog(QDialog):
 
 		member.status = member_status
 
-		f_in_w = self.dict_fightings_in_weights[member.weight_id]
+		f_in_w = self.fightings_info[member.weight_id]
 		current_fr_round = f_in_w.current_fr_round
 		f_by_r = f_in_w.fightings_by_round
 		fs = f_by_r[current_fr_round]
