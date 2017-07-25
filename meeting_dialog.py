@@ -73,6 +73,9 @@ class MeetingDialog(QDialog):
 		self.main_referee = None
 		self.main_clerk = None
 
+		#элементы листбокса участников храню отдельно
+		self.meet_members_items = {}
+
 		self.fighting_service = FightingsService(self.meet.id)
 		#словарь боёв {weightcat_id : FightingsInWeight}
 		self.fightings_info = {}
@@ -199,6 +202,7 @@ class MeetingDialog(QDialog):
 				#item.setCheckState(QtCore.Qt.Checked)
 				self.set_item_background(item, member.status)
 				self.ui.membersList.addItem(item)
+				self.meet_members_items[member.id] = item
 
 	def weight_category_changed(self):
 		indx = self.ui.weightcatCBox.currentIndex()
@@ -539,9 +543,9 @@ class MeetingDialog(QDialog):
 			actionSetLose.setEnabled(False)
 			actionSetMember.setEnabled(False)
 		else:
-		    actionSetWin.setEnabled(member.status != MemberStatus.WITHDRAW and member.status != MemberStatus.WINNER)
-		    actionSetLose.setEnabled(member.status != MemberStatus.WITHDRAW and member.status != MemberStatus.LOSER)
-		    actionSetMember.setEnabled(member.status != MemberStatus.WITHDRAW and member.status != MemberStatus.MEMBER)
+			actionSetWin.setEnabled(member.status != MemberStatus.WITHDRAW and member.status != MemberStatus.WINNER)
+			actionSetLose.setEnabled(member.status != MemberStatus.WITHDRAW and member.status != MemberStatus.LOSER)
+			actionSetMember.setEnabled(member.status != MemberStatus.WITHDRAW and member.status != MemberStatus.MEMBER)
 		menu.exec_(QtGui.QCursor.pos())
 
 	#установить статус участника
@@ -549,26 +553,31 @@ class MeetingDialog(QDialog):
 		member = current_item.data(QtCore.Qt.UserRole)
 
 		member.status = member_status
-		'''
-		f_in_w = self.fightings_info[member.weight_id]
-		current_fr_round = f_in_w.current_fr_round
-		f_by_r = f_in_w.fightings_by_round
-		fs = f_by_r[current_fr_round]
-		fighting = next((f for f in fs if f.member_a_id == member.id or f.member_b_id == member.id), None)
-		winner_id = None
-		loser_id = None
-		if member_status == MemberStatus.WINNER:
-			winner_id = member.id
-			loser_id = fighting.loser_id
-		if member_status == MemberStatus.LOSER:
-			winner_id = fighting.loser_id
-			loser_id = member.id
-		self.dbm.set_fighting_result(fighting.id, winner_id, loser_id)
-		'''
+
 		fighting = self.fighting_service.get_fighting(member)
+		#соперник
+		member_rival = None
+		if fighting.member_a_id == member.id:
+			if fighting.member_b_id:
+				member_rival = next((m for m in self.meet_members if m.id == fighting.member_b_id), None)
+		if fighting.member_b_id == member.id:
+			if fighting.member_a_id:
+				member_rival = next((m for m in self.meet_members if m.id == fighting.member_a_id), None)
+
+		member_status_rival = MemberStatus.MEMBER
+		if member_status == MemberStatus.WINNER:
+			member_status_rival = MemberStatus.LOSER
+		if member_status == MemberStatus.LOSER:
+			member_status_rival = MemberStatus.WINNER
+
 		self.fighting_service.set_fighting_result(member, member_status)
 		self.set_item_background(current_item, member_status)
 		self.memberListItem_pressed(current_item)
+
+		if member_rival:
+			member_rival.status = member_status_rival
+			member_rival_item = self.meet_members_items[member_rival.id]
+			self.set_item_background(member_rival_item, member_status_rival)
 
 	def memberListItem_pressed(self, item):
 		member = item.data(QtCore.Qt.UserRole)
