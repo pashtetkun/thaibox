@@ -1,6 +1,6 @@
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog, QMessageBox
 from list_meetings import Ui_Dialog as listmeeting
 from database import Dbase as db
 from database_manager import DbManager as dbmanager
@@ -9,6 +9,7 @@ import re
 import xlsxwriter
 import datetime
 import math
+import subprocess
 
 
 class ListMeetingSlots(listmeeting):
@@ -98,6 +99,8 @@ class ListMeetingDialog(QDialog):
 		delta = dend - dstart
 		deltaday = delta.days + 1 # учитываем и первый день соревнования
 
+		path = self.name.replace("\\", "") + '.xlsx'
+
 		'''# TODO: сделать наименование листов в зависимости от ринга'''
 		# TODO: учитывать количество боев в день
 		# TODO: количество поединков в соревновании
@@ -114,7 +117,7 @@ class ListMeetingDialog(QDialog):
 			print('Ошибка')
 			return
 
-		workbook = xlsxwriter.Workbook(self.name.replace("\\", "") + '.xlsx')
+		workbook = xlsxwriter.Workbook(path)
 
 		###############################
 		### Список участников по рингам
@@ -427,6 +430,8 @@ class ListMeetingDialog(QDialog):
 
 		print('Документы готовы')
 		workbook.close()
+		QMessageBox.information(self, 'Сообщение', 'Документы готовы')
+		subprocess.call(path, shell=True)
 		self.close()
 
 	def edit_pressed(self):

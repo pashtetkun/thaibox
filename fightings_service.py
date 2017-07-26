@@ -56,6 +56,7 @@ class FightingsService():
     #определяет можно ли провести жеребъевку следующего раунда
     def is_drawing_allow(self):
         drawing_allow = True
+        message = ""
         for wcat_id in self.fightings_info:
             fightings_in_weight = self.fightings_info[wcat_id]
             current_fr_round = fightings_in_weight.current_fr_round
@@ -68,12 +69,24 @@ class FightingsService():
 
             not_defined_winners = [f for f in fightings_in_weight.fightings_by_round[current_fr_round] if
                                    f.winner_id == None]
+
             if not_defined_winners:
-                print("Не указаны все проигравшие в ", fightings_in_weight.weight_category.name,
-                      ", раунд: 1/%d" % current_fr_round)
+                message = "Жеребьевка недоступна - не указаны все результаты в категории %s , раунд: 1/%d" % (fightings_in_weight.weight_category.name,
+                      current_fr_round)
+                print(message)
                 drawing_allow = False
                 break
-        return drawing_allow
+        return drawing_allow, message
+
+    #возвращает порядковый номер текущего раунда
+    def get_current_round(self):
+        round = 0
+        for wcat_id in self.fightings_info:
+            fightings_in_weight = self.fightings_info[wcat_id]
+            if round < len(fightings_in_weight.fightings_by_round):
+                round = len(fightings_in_weight.fightings_by_round)
+
+        return round
 
     #возвращает число боёв
     def get_fightings_count(self):

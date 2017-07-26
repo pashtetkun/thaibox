@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QDialog, QListWidgetItem, QMenu, QAction
+from PyQt5.QtWidgets import QDialog, QListWidgetItem, QMenu, QAction, QMessageBox
 from meet import Ui_Dialog as createmeeting
 from database_manager import DbManager as dbmanager
 from models import Meeting, MeetReferee, MeetMember, Fighting, MemberStatus, FightingsInWeigth
@@ -442,6 +442,11 @@ class MeetingDialog(QDialog):
 
 	def sortition_pressed(self):
 
+		round = self.fighting_service.get_current_round() + 1
+		buttonReply = QMessageBox.question(self, 'Сообщение', 'Провести жеребьевку %d-го раунда?' % round)
+		if buttonReply != QMessageBox.Yes:
+			return
+
 		# TODO: Проверить валидность данных
 
 		validator = Valid()
@@ -452,7 +457,9 @@ class MeetingDialog(QDialog):
 			return
 
 		#проверка что можно провести жеребъевку следующего раунда соревнований
-		if not self.fighting_service.is_drawing_allow():
+		drawing_allow, message = self.fighting_service.is_drawing_allow()
+		if not drawing_allow:
+			QMessageBox.information(self, 'Сообщение', message)
 			return
 
 		print("проверка доступности жеребьевки пройдена!")
