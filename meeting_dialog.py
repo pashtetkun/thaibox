@@ -39,7 +39,6 @@ class MeetingDialog(QDialog):
 
 		super(MeetingDialog, self).__init__()
 		self.initialize = False
-		self.id = 0
 		self.ui = CreateMeetingSlots()
 		self.ui.setupUi(self)
 		self.ui.addButton.clicked.connect(self.add_member_pressed)
@@ -55,7 +54,6 @@ class MeetingDialog(QDialog):
 		self.ui.mainclerkCBox.currentIndexChanged.connect(self.main_clerk_changed)
 		#
 		self.ring = 1
-		self.meeting = 0
 		self.meet = None
 		if meet:
 			self.meet = Meeting(meet)
@@ -125,7 +123,6 @@ class MeetingDialog(QDialog):
 		mems_in_meet_ids = []
 		if self.meet:
 			self.setWindowTitle("Изменение соревнования")
-			self.id = self.meet.id
 			self.ui.nameEdit.setText(self.meet.name.replace('\\',''))
 			self.ui.startDate.setDate(QtCore.QDate.fromString(self.meet.start_date, 'yyyy-MM-dd'))
 			self.ui.endDate.setDate(QtCore.QDate.fromString(self.meet.end_date, 'yyyy-MM-dd'))
@@ -348,8 +345,6 @@ class MeetingDialog(QDialog):
 
 	def wsortition_pressed(self):
 
-		print(self.id)
-
 		count = len(self.meet_members)
 		#TODO: Если self.ui.meetCountEdit.text() пустое то установить его по количеству участников (боев будет не больше чем если каждый участник один выйдет на ринг)
 
@@ -390,9 +385,6 @@ class MeetingDialog(QDialog):
 
 		''' проверить сколько элементов в списке, если больше или равно 3, то жеребьевка случайным образом взять два
 		элемента (удалить их из списка)'''
-
-		if self.meet:
-			self.meeting = self.id
 
 		if not members:
 			return
@@ -450,50 +442,55 @@ class MeetingDialog(QDialog):
 
 	def sortition_pressed(self):
 
-		#проверка что можно провести жеребъевку следующего раунда соревнований
-		if not self.fighting_service.is_drawing_allow():
-			return
-
-		print("проверка доступности жеребьевки пройдена!")
-
-		'''# TODO: 1. Создать запись о соревновании '''
-		'''# TODO: 2. Заполнить таблицу участников основываясь на ID созданного соревнования и ID участника'''
 		# TODO: Проверить валидность данных
 
 		validator = Valid()
-
-		'''# TODO: Если соревнование редактируется, то удалить старые данные'''
-		'''# TODO: проверить не редактируется ли соревнование, если да, то удалить старые данные сортировки'''
-		if self.meet:
-			self.dbm.delete_meet_referee(self.meet.id)
-			#удаляем только если еще не было боёв
-			#if not count_f:
-			    #self.dbm.delete_meet_member(self.meet.id)
-				#провести пережеребьевку текущего раунда ???
-			    #self.dbm.delete_fightings_by_meeting(self.meet.id)
-			self.meeting = self.id
-		else:
-			self.meeting = 0
 
 		if not self.valid(validator.validString(self.ui.nameEdit.text())):
 			return
 		if not self.valid(validator.validDigit(self.ui.meetCountEdit.text())):
 			return
 
+		#проверка что можно провести жеребъевку следующего раунда соревнований
+		if not self.fighting_service.is_drawing_allow():
+			return
+
+		print("проверка доступности жеребьевки пройдена!")
+
+		# TODO: Если self.ui.meetCountEdit.text() пустое то установить его по количеству участников (боев будет не больше чем если каждый участник один выйдет на ринг)
 		count = len(self.meet_members)
-		members_by_weigth = {}
-
-		#TODO: Если self.ui.meetCountEdit.text() пустое то установить его по количеству участников (боев будет не больше чем если каждый участник один выйдет на ринг)
-
 		if self.ui.meetCountEdit.text() == '':
 			self.ui.meetCountEdit.setText(str(count))
 
 		self.meet = self.get_meeting_values()
 
+		'''# TODO: 1. Создать запись о соревновании '''
+		'''# TODO: 2. Заполнить таблицу участников основываясь на ID созданного соревнования и ID участника'''
+
+		'''# TODO: Если соревнование редактируется, то удалить старые данные'''
+		'''# TODO: проверить не редактируется ли соревнование, если да, то удалить старые данные сортировки'''
+		if self.meet.id:
+			self.dbm.delete_meet_referee(self.meet.id)
+			#удаляем только если еще не было боёв
+			#if not count_f:
+			    #self.dbm.delete_meet_member(self.meet.id)
+				#провести пережеребьевку текущего раунда ???
+			    #self.dbm.delete_fightings_by_meeting(self.meet.id)
+
+		members_by_weigth = {}
+
 		if self.meet.id:
 			self.dbm.update_meeting(self.meet)
 		else:
 			self.meet = self.dbm.insert_meeting(self.meet)
+			for member in self.meet_members:
+				meet_member = MeetMember()
+				meet_member.meeting_id = self.meet.id
+				meet_member.member_id = member.id
+				try:
+					self.dbm.insert_meet_member(meet_member)
+				except Exception as e:
+					print(e)
 
 		#разбираем по весовым категориям
 		for member in self.meet_members:
