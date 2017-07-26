@@ -5,15 +5,15 @@ from models import FightingsInWeigth, MemberStatus
 
 #сервис работы с боями
 class FightingsService():
-    def __init__(self, meeting_id):
-        self.meeting_id = meeting_id
+    def __init__(self, meeting):
+        self.meeting = meeting
         self.dbm = dbmanager()
         self.fightings_info = self.get_fightings_info()
 
     #получение данных о всех боях в соревновании
     def get_fightings_info(self):
         result = {}
-        fightings = self.dbm.get_fightings_by_meeting(self.meeting_id)
+        fightings = self.dbm.get_fightings_by_meeting(self.meeting.id) if self.meeting else []
         weight_categories = self.dbm.get_all_weight_categories()
         for wcat in weight_categories:
             fightings_by_round = {}
@@ -87,6 +87,8 @@ class FightingsService():
     def get_fighting(self, member):
         f_in_w = self.fightings_info[member.weight_id]
         current_fr_round = f_in_w.current_fr_round
+        if current_fr_round == 999:
+            return None
         f_by_r = f_in_w.fightings_by_round
         fs = f_by_r[current_fr_round]
         fighting = next((f for f in fs if f.member_a_id == member.id or f.member_b_id == member.id), None)

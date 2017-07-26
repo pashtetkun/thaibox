@@ -67,6 +67,13 @@ class DbManager():
 
         self.database.ins_upd(sql, params)
 
+    def insert_meeting(self, meeting):
+        sql = """INSERT INTO meeting(name, sdate, edate, city, meetcount, mainreferee, mainclerk)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)"""
+        params = (meeting.name, meeting.start_date, meeting.end_date, meeting.city, meeting.meetcount,
+                  meeting.main_referee_id, meeting.main_clerk_id)
+        self.database.ins_upd(sql, params)
+
     def delete_meet_referee(self, meeting_id):
         sql = "DELETE FROM meetreferees WHERE meeting=?"
         params = (meeting_id,)

@@ -76,7 +76,7 @@ class MeetingDialog(QDialog):
 		#элементы листбокса участников храню отдельно
 		self.meet_members_items = {}
 
-		self.fighting_service = FightingsService(self.meet.id)
+		self.fighting_service = FightingsService(self.meet)
 		#словарь боёв {weightcat_id : FightingsInWeight}
 		self.fightings_info = {}
 
@@ -99,6 +99,7 @@ class MeetingDialog(QDialog):
 		self.ui.membersList.customContextMenuRequested.connect(self.show_cmenu)
 
 		self.ui.membersList.itemPressed.connect(self.memberListItem_pressed)
+		self.ui.athletesList.itemPressed.connect(self.athletesListItem_pressed)
 
 
 		'''# TODO: сделать список выбора и заполнить его весовыми категориями'''
@@ -332,6 +333,7 @@ class MeetingDialog(QDialog):
 	def get_meeting_values(self):
 		if not self.meet:
 			self.meet = Meeting()
+			self.meet.id = 0
 		validator = Valid()
 		self.meet.main_referee_id = self.main_referee.id
 		self.meet.main_clerk_id = self.main_clerk.id
@@ -356,7 +358,10 @@ class MeetingDialog(QDialog):
 
 		'''# TODO: Изменить данные по соревнованию, главного судью и главного секретаря'''
 		self.meet = self.get_meeting_values()
-		self.dbm.update_meeting(self.meet)
+		if self.meet.id:
+			self.dbm.update_meeting(self.meet)
+		else:
+			self.dbm.insert_meeting(self.meet)
 
 		'''# TODO: Очистить таблицу судей от старых данных по текущему соревнованию'''
 		self.dbm.delete_meet_referee(self.meet.id)
@@ -485,7 +490,7 @@ class MeetingDialog(QDialog):
 
 		self.meet = self.get_meeting_values()
 
-		if self.meet:
+		if self.meet.id:
 			self.dbm.update_meeting(self.meet)
 		else:
 			self.meet = self.dbm.insert_meeting(self.meet)
@@ -536,9 +541,15 @@ class MeetingDialog(QDialog):
 
 		#доступность пунктов меню
 		#если боев вообще нет, то и меню недоступны
-		#count_f = self.dbm.get_count_fightings_by_meeting(self.meet.id)
+		#или если у участника нет соперника
 		count_f = self.fighting_service.get_fightings_count()
-		if not count_f:
+		fighting = self.fighting_service.get_fighting(member)
+		not_rival = False
+		if fighting:
+			if not fighting.member_a_id or not fighting.member_b_id:
+				not_rival = True
+
+		if not count_f or not_rival:
 			actionSetWin.setEnabled(False)
 			actionSetLose.setEnabled(False)
 			actionSetMember.setEnabled(False)
@@ -581,7 +592,21 @@ class MeetingDialog(QDialog):
 
 	def memberListItem_pressed(self, item):
 		member = item.data(QtCore.Qt.UserRole)
-		#self.ui.removeButton.setEnabled(member.status != MemberStatus.WITHDRAW)
+		count_f = self.fighting_service.get_fightings_count()
+		self.ui.addButton.setEnabled(False)
+		if count_f:
+			self.ui.removeButton.setEnabled(False)
+		else:
+			self.ui.removeButton.setEnabled(True)
+
+	def athletesListItem_pressed(self, item):
+		member = item.data(QtCore.Qt.UserRole)
+		count_f = self.fighting_service.get_fightings_count()
+		self.ui.removeButton.setEnabled(False)
+		if count_f:
+			self.ui.addButton.setEnabled(False)
+		else:
+			self.ui.addButton.setEnabled(True)
 
 	def set_item_background(self, item, member_status):
 		#member = item.data(QtCore.Qt.UserRole)
