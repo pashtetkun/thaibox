@@ -7,6 +7,7 @@ from database_manager import DbManager as dbmanager
 from meeting_dialog import MeetingDialog
 import re
 import xlsxwriter
+from xlsxwriter.utility import xl_rowcol_to_cell, xl_cell_to_rowcol
 import datetime
 import math
 import subprocess
@@ -430,9 +431,59 @@ class ListMeetingDialog(QDialog):
 
 		print('Документы готовы')
 		workbook.close()
-		QMessageBox.information(self, 'Сообщение', 'Документы готовы')
-		subprocess.call(path, shell=True)
+		#QMessageBox.information(self, 'Сообщение', 'Документы готовы')
+		#subprocess.call(path, shell=True)
+
+		workbook.close()
+
+		try:
+			self.export_drawing()
+		except Exception as e:
+			print(e)
+
 		self.close()
+
+	#Вывод сетки жеребьевки
+	def export_drawing(self):
+		pathDrawing = self.name.replace("\\", "") + '_сетки жеребьевки.xlsx'
+		workbook = xlsxwriter.Workbook(pathDrawing)
+
+		weight_categories = self.dbm.get_all_weight_categories()
+		for wcat in weight_categories:
+			self.create_drawing_sheet(workbook, wcat)
+		workbook.close()
+
+	def create_drawing_sheet(self, workbook, wcat):
+		sheet_name = wcat.name if len(wcat.name) < 31 else wcat.name[:31]
+		worksheet = workbook.add_worksheet(sheet_name)
+
+		print(wcat.name)
+
+		widthColPage1 = 0.92  # ширина колонок на первой странице
+		widthColPage2 = 2.43  # ширина колонок на второй странице
+		rangeColPage1 = 'A:BO'
+		rangeColPage2 = 'BQ:CU'
+		hiddenCol = 'BP:BP'
+
+		heightRow = 4.5
+
+		cell_left_top = xl_cell_to_rowcol('A1')
+		cell_right_top = xl_cell_to_rowcol('A387')
+		cell_left_bottom = xl_cell_to_rowcol('C387')
+		cell_right_bottom = xl_cell_to_rowcol('CU387')
+		print(cell_left_top, cell_right_top, cell_left_bottom, cell_right_bottom)
+
+		worksheet.hide_gridlines(2)
+
+		for row in range(cell_right_bottom[0]):
+			worksheet.set_row(row, heightRow)
+
+		# размеры колонок
+		worksheet.set_column(rangeColPage1, widthColPage1)
+		worksheet.set_column(rangeColPage2, widthColPage2)
+		worksheet.set_column(hiddenCol, None, None, {'hidden': True})
+
+		format_no_borders = workbook.add_format({'border': 0})
 
 	def edit_pressed(self):
 
