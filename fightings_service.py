@@ -67,8 +67,7 @@ class FightingsService():
             if current_fr_round == 1:
                 continue
 
-            not_defined_winners = [f for f in fightings_in_weight.fightings_by_round[current_fr_round] if
-                                   f.winner_id == None]
+            not_defined_winners = [f for f in fightings_in_weight.fightings_by_round[current_fr_round] if not f.winner_id]
 
             if not_defined_winners:
                 message = "Жеребьевка недоступна - не указаны все результаты в категории %s , раунд: 1/%d" % (fightings_in_weight.weight_category.name,
@@ -108,15 +107,15 @@ class FightingsService():
         return fighting
 
     #установить результат боя
-    def set_fighting_result(self, member, member_status):
-        fighting = self.get_fighting(member)
+    def set_fighting_result(self, fighting, member, member_status, member_rival):
+        #fighting = self.get_fighting(member)
         winner_id = None
         loser_id = None
         if member_status == MemberStatus.WINNER:
             winner_id = member.id
-            loser_id = fighting.loser_id
+            loser_id = member_rival.id
         if member_status == MemberStatus.LOSER:
-            winner_id = fighting.loser_id
+            winner_id = member_rival.id
             loser_id = member.id
         self.dbm.set_fighting_result(fighting.id, winner_id, loser_id)
 

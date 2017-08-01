@@ -449,6 +449,7 @@ class ListMeetingDialog(QDialog):
 		workbook = xlsxwriter.Workbook(pathDrawing)
 
 		weight_categories = self.dbm.get_all_weight_categories()
+		#fighting_service
 		for wcat in weight_categories:
 			self.create_drawing_sheet(workbook, wcat)
 		workbook.close()
