@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'meet.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.8.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -114,6 +114,12 @@ class Ui_Dialog(object):
         self.weigthcat = QtWidgets.QLabel(Dialog)
         self.weigthcat.setGeometry(QtCore.QRect(10, 100, 131, 24))
         self.weigthcat.setObjectName("weigthcat")
+        self.round = QtWidgets.QLabel(Dialog)
+        self.round.setGeometry(QtCore.QRect(220, 130, 61, 16))
+        self.round.setObjectName("round")
+        self.stage = QtWidgets.QLabel(Dialog)
+        self.stage.setGeometry(QtCore.QRect(490, 130, 101, 16))
+        self.stage.setObjectName("stage")
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -162,4 +168,16 @@ class Ui_Dialog(object):
         self.wsortitionButton.setText(_translate("Dialog", "Без жеребьевки"))
         self.divrings.setText(_translate("Dialog", "Разбивать по рингам"))
         self.weigthcat.setText(_translate("Dialog", "Весовая категория"))
+        self.round.setText(_translate("Dialog", "раунд"))
+        self.stage.setText(_translate("Dialog", "стадия"))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    Dialog = QtWidgets.QDialog()
+    ui = Ui_Dialog()
+    ui.setupUi(Dialog)
+    Dialog.show()
+    sys.exit(app.exec_())
 

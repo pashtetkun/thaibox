@@ -158,6 +158,8 @@ class MeetingDialog(QDialog):
         self.refresh_colreferees_list()
         # TODO: Заполнить список спортсменов
 
+        self.ui.round.setText("раунд %d" % self.fighting_service.get_current_round())
+
     #определить статусы участников
     def define_meet_member_statuses(self):
         for member in self.meet_members:
@@ -211,6 +213,10 @@ class MeetingDialog(QDialog):
 
         self.refresh_athletes_list()
         self.refresh_members_list()
+        stage = "стадия"
+        if self.current_weight_category:
+            stage = "стадия 1/%d" % self.fighting_service.fightings_info[self.current_weight_category.id].current_fr_round
+        self.ui.stage.setText(stage)
 
     def main_referee_changed(self):
         indx = self.ui.mainrefCBox.currentIndex()
@@ -479,12 +485,14 @@ class MeetingDialog(QDialog):
 
         '''# TODO: Сделать выборку из групп пока количество больше 1'''
 
-        print("жеребьевка произведена!")
+        print("Жеребьевка %d-го раунда произведена" % round)
+        QMessageBox.information(self, 'Сообщение', 'Жеребьевка %d-го раунда произведена' % round)
         #self.close()
         try:
             self.fighting_service.refresh_fightings_info()
             self.define_meet_member_statuses()
             self.refresh_members_list()
+            self.ui.round.setText("раунд %d" % self.fighting_service.get_current_round())
         except Exception as e:
             print(e)
 
