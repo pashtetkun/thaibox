@@ -8,11 +8,13 @@ class FightingsService():
     def __init__(self, meeting):
         self.meeting = meeting
         self.dbm = dbmanager()
-        self.fightings_info = self.get_fightings_info()
+        self.fightings_info = {}
+        self.fightings_count = 0
+        self.refresh_fightings_info()
 
     #получение данных о всех боях в соревновании
-    def get_fightings_info(self):
-        result = {}
+    def refresh_fightings_info(self):
+        self.fightings_info = {}
         fightings = self.dbm.get_fightings_by_meeting(self.meeting.id) if self.meeting else []
         weight_categories = self.dbm.get_all_weight_categories()
         for wcat in weight_categories:
@@ -29,9 +31,9 @@ class FightingsService():
                 if f.fractional_round < current_fr_round:
                     current_fr_round = f.fractional_round
 
-            result[wcat.id] = FightingsInWeigth(wcat, current_fr_round, fightings_by_round)
+            self.fightings_info[wcat.id] = FightingsInWeigth(wcat, current_fr_round, fightings_by_round)
 
-        return result
+        self.fightings_count = self.get_fightings_count()
 
     #определяем статус участника
     def get_member_status(self, member):
@@ -107,15 +109,7 @@ class FightingsService():
         return fighting
 
     #установить результат боя
-    def set_fighting_result(self, fighting, member, member_status, member_rival):
+    def set_fighting_result(self, fighting, winner_id, loser_id):
         #fighting = self.get_fighting(member)
-        winner_id = None
-        loser_id = None
-        if member_status == MemberStatus.WINNER:
-            winner_id = member.id
-            loser_id = member_rival.id
-        if member_status == MemberStatus.LOSER:
-            winner_id = member_rival.id
-            loser_id = member.id
-        self.dbm.set_fighting_result(fighting.id, winner_id, loser_id)
+        return self.dbm.set_fighting_result(fighting.id, winner_id, loser_id)
 

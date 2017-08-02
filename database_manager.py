@@ -103,6 +103,10 @@ class DbManager():
         row = self.database.select_one('SELECT * FROM meeting WHERE id=?', (id,))
         return Meeting(row) if row else None
 
+    def get_fighting(self, id):
+        row = self.database.select_one('SELECT * FROM fightings WHERE id=?', (id,))
+        return Fighting(row) if row else None
+
     def insert_meeting(self, meeting):
         sql = """INSERT INTO meeting(name, sdate, edate, city, meetcount, mainreferee, mainclerk) 
                     VALUES (?, ?, ?, ?, ?, ?, ?)"""
@@ -129,6 +133,7 @@ class DbManager():
                          WHERE id=?"""
         params = (winner_id, loser_id, fighting_id)
         self.database.ins_upd(sql, params)
+        return self.get_fighting(fighting_id)
 
     def get_version(self):
         row = self.database.select_one('SELECT * FROM version LIMIT 1')
