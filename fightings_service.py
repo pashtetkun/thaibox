@@ -58,18 +58,23 @@ class FightingsService():
     #определяет можно ли провести жеребъевку следующего раунда
     def is_drawing_allow(self):
         drawing_allow = True
+        has_not_final_round = False#имеется ли не финальный раунд
         message = ""
+        current_round = self.get_current_round()
         for wcat_id in self.fightings_info:
             fightings_in_weight = self.fightings_info[wcat_id]
             current_fr_round = fightings_in_weight.current_fr_round
             # еще не было жеребьевки
-            if current_fr_round == 999:
+            if current_fr_round == 999 and current_round and fightings_in_weight.fightings_by_round:
+                has_not_final_round = True
                 continue
             # после финала - не нужна дальнейшая жеребьевка
             if current_fr_round == 1:
                 continue
 
-            not_defined_winners = [f for f in fightings_in_weight.fightings_by_round[current_fr_round] if not f.winner_id]
+            not_defined_winners = []
+            if fightings_in_weight.fightings_by_round:
+                not_defined_winners = [f for f in fightings_in_weight.fightings_by_round[current_fr_round] if not f.winner_id]
 
             if not_defined_winners:
                 message = "Жеребьевка недоступна - не указаны все результаты в категории %s , раунд: 1/%d" % (fightings_in_weight.weight_category.name,
@@ -77,6 +82,13 @@ class FightingsService():
                 print(message)
                 drawing_allow = False
                 break
+
+            if fightings_in_weight.fightings_by_round:
+                has_not_final_round = True
+
+        if drawing_allow and not has_not_final_round:
+            drawing_allow = False
+            message = "Текущая стадия - финал. Жеребьёвка невозможна"
         return drawing_allow, message
 
     #возвращает порядковый номер текущего раунда

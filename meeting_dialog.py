@@ -73,6 +73,7 @@ class MeetingDialog(QDialog):
 
         #элементы листбокса участников храню отдельно
         self.meet_members_items = {}
+        self.weight_categories_ids = []
 
         self.fighting_service = FightingsService(self.meet)
 
@@ -158,7 +159,25 @@ class MeetingDialog(QDialog):
         self.refresh_colreferees_list()
         # TODO: Заполнить список спортсменов
 
-        self.ui.round.setText("раунд %d" % self.fighting_service.get_current_round())
+        self.refresh_round_text()
+
+    def refresh_round_text(self):
+        current_round = self.fighting_service.get_current_round()
+        string = str(current_round) if current_round != 0 else "-"
+        self.ui.round.setText("раунд %s" % string)
+
+    def refresh_stage_text(self):
+        string = "-"
+        if self.current_weight_category:
+            current_fr_round = self.fighting_service.fightings_info[
+                self.current_weight_category.id].current_fr_round
+            string = "1/%d" % current_fr_round
+            if current_fr_round == 999:
+                string = "-"
+            if current_fr_round == 1:
+                string = "Финал"
+        stage = "стадия %s" % string
+        self.ui.stage.setText(stage)
 
     #определить статусы участников
     def define_meet_member_statuses(self):
@@ -168,17 +187,23 @@ class MeetingDialog(QDialog):
 
     #заполнить комбобоксы
     def fill_comboboxes(self):
-        self.ui.weightcatCBox.clear()
-        self.ui.weightcatCBox.addItem("Все категории")
-        for wcat in self.weight_categories:
-            self.ui.weightcatCBox.addItem(wcat.name.replace('\\', ''))
-
+        self.refresh_weight_categories_combobox()
         self.ui.mainrefCBox.clear()
         self.ui.mainclerkCBox.clear()
         for referee in self.referees:
             self.ui.mainrefCBox.addItem(referee.fio.replace('\\', ''))
             self.ui.mainclerkCBox.addItem(referee.fio.replace('\\', ''))
 
+    def refresh_weight_categories_combobox(self):
+        self.ui.weightcatCBox.clear()
+        self.weight_categories_ids = [0]
+        self.ui.weightcatCBox.addItem("Все категории")
+        for wcat in self.weight_categories:
+            fightings_in_weight = self.fighting_service.fightings_info[wcat.id]
+            current_round = self.fighting_service.get_current_round()
+            if (self.fighting_service.fightings_count and fightings_in_weight.fightings_by_round) or not current_round:
+                self.weight_categories_ids.append(wcat.id)
+                self.ui.weightcatCBox.addItem(wcat.name.replace('\\', ''))
 
     #обновить листбокс спортсменов
     def refresh_athletes_list(self):
@@ -209,14 +234,14 @@ class MeetingDialog(QDialog):
             return
 
         print(indx)
-        self.current_weight_category = None if indx == 0 else self.weight_categories[indx-1]
+
+        wcat_id = self.weight_categories_ids[indx]
+
+        self.current_weight_category = next((w for w in self.weight_categories if w.id == wcat_id),None)
 
         self.refresh_athletes_list()
         self.refresh_members_list()
-        stage = "стадия"
-        if self.current_weight_category:
-            stage = "стадия 1/%d" % self.fighting_service.fightings_info[self.current_weight_category.id].current_fr_round
-        self.ui.stage.setText(stage)
+        self.refresh_stage_text()
 
     def main_referee_changed(self):
         indx = self.ui.mainrefCBox.currentIndex()
@@ -492,7 +517,9 @@ class MeetingDialog(QDialog):
             self.fighting_service.refresh_fightings_info()
             self.define_meet_member_statuses()
             self.refresh_members_list()
-            self.ui.round.setText("раунд %d" % self.fighting_service.get_current_round())
+            self.refresh_round_text()
+            self.refresh_stage_text()
+            self.refresh_weight_categories_combobox()
         except Exception as e:
             print(e)
 
