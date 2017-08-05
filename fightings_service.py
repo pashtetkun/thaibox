@@ -61,11 +61,14 @@ class FightingsService():
         has_not_final_round = False#имеется ли не финальный раунд
         message = ""
         current_round = self.get_current_round()
+        if not current_round:
+            return True, ""
+
         for wcat_id in self.fightings_info:
             fightings_in_weight = self.fightings_info[wcat_id]
             current_fr_round = fightings_in_weight.current_fr_round
             # еще не было жеребьевки
-            if current_fr_round == 999 and current_round and fightings_in_weight.fightings_by_round:
+            if current_fr_round == 999 and fightings_in_weight.fightings_by_round:
                 has_not_final_round = True
                 continue
             # после финала - не нужна дальнейшая жеребьевка
