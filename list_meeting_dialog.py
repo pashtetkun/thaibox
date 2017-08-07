@@ -5,6 +5,7 @@ from list_meetings import Ui_Dialog as listmeeting
 from database import Dbase as db
 from database_manager import DbManager as dbmanager
 from meeting_dialog import MeetingDialog
+from fightings_service import FightingsService
 import re
 import xlsxwriter
 from xlsxwriter.utility import xl_rowcol_to_cell, xl_cell_to_rowcol
@@ -29,6 +30,7 @@ class ListMeetingDialog(QDialog):
 		self.ui.edit.clicked.connect(self.edit_pressed)
 		self.ui.exportxls.clicked.connect(self.exportxls_pressed)
 		self.ui.cancel.clicked.connect(self.cancel_pressed)
+		self.meeting = None
 		self.name = ''
 		self.start = ''
 		self.end = ''
@@ -81,6 +83,7 @@ class ListMeetingDialog(QDialog):
 		database = db()
 		self.dbm = dbmanager()
 		meeting = self.dbm.get_meeting(id)
+		self.meeting = self.dbm.get_meeting(id)
 		rings = self.dbm.get_all_rings()
 		# worksheet.
 		self.name = meeting.name
@@ -434,23 +437,29 @@ class ListMeetingDialog(QDialog):
 		#QMessageBox.information(self, 'Сообщение', 'Документы готовы')
 		#subprocess.call(path, shell=True)
 
-		workbook.close()
+		#workbook.close()
 
 		try:
-			self.export_drawing()
+			self.export_drawing(self.meeting)
 		except Exception as e:
 			print(e)
 
 		self.close()
 
 	#Вывод сетки жеребьевки
-	def export_drawing(self):
+	def export_drawing(self, meeting):
+		fighting_service = FightingsService(meeting)
+		active_weight_categories = fighting_service.get_active_weight_categories()
+
 		pathDrawing = self.name.replace("\\", "") + '_сетки жеребьевки.xlsx'
 		workbook = xlsxwriter.Workbook(pathDrawing)
 
-		weight_categories = self.dbm.get_all_weight_categories()
+		#fightings = self.dbm.get_fightings_by_meeting(meeting.id)
+		#members = self.dbm.get_meet_members(meeting.id)
+		#weight_categories = self.dbm.get_all_weight_categories()
+
 		#fighting_service
-		for wcat in weight_categories:
+		for wcat in active_weight_categories:
 			self.create_drawing_sheet(workbook, wcat)
 		workbook.close()
 

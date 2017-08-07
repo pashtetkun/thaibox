@@ -35,6 +35,19 @@ class FightingsService():
 
         self.fightings_count = self.get_fightings_count()
 
+    #возвращает весовые категории в соревновании
+    def get_active_weight_categories(self):
+        if not self.fightings_count:
+            return []
+
+        result = []
+        weight_categories = self.dbm.get_all_weight_categories()
+        for wcat in weight_categories:
+            if self.fightings_info[wcat.id].fightings_by_round:
+                result.append(wcat)
+
+        return result
+
     #определяем статус участника
     def get_member_status(self, member):
         status = MemberStatus.MEMBER
