@@ -493,7 +493,134 @@ class ListMeetingDialog(QDialog):
 		worksheet.set_column(rangeColPage2, widthColPage2)
 		worksheet.set_column(hiddenCol, None, None, {'hidden': True})
 
-		format_no_borders = workbook.add_format({'border': 0})
+		#format_no_borders = workbook.add_format({'border': 0})
+
+		#######################################
+		#объединение колонок в сетке жеребьевки
+		#######################################
+		format_merge_fighting_member = workbook.add_format({'bg_color': 'white'})
+
+		#стадия 1
+		template_stage1_merge = 'C%d:AA%d'
+		stage1_fightings = 16
+		stage1_first_row_fightings_top = 17
+		stage1_first_row_fightings_bottom = 23
+		stage1_interval_fightings = 10
+		#template_stage1_border = 'C:Z'
+		for i in range(stage1_fightings):
+			#format_merge_fighting_member.set_bottom(1)
+			#format_merge_fighting_member.set_top(0)
+			num_top = stage1_first_row_fightings_top+i*stage1_interval_fightings
+			merge_cells_top = template_stage1_merge % (num_top, num_top+1)
+			worksheet.merge_range(merge_cells_top, '', format_merge_fighting_member)
+
+			#format_merge_fighting_member.set_bottom(0)
+			#format_merge_fighting_member.set_top(1)
+			num_bottom = stage1_first_row_fightings_bottom + i * stage1_interval_fightings
+			merge_cells_bottom = template_stage1_merge % (num_bottom, num_bottom + 1)
+			worksheet.merge_range(merge_cells_bottom, '', format_merge_fighting_member)
+
+		#стадия 2
+		template_stage2_merge = 'AA%d:AM%d'
+		stage2_fightings = 8
+		stage2_first_row_fightings_top = 19
+		stage2_first_row_fightings_bottom = 31
+		stage2_interval_fightings = 20
+		for i in range(stage2_fightings):
+			format_merge_fighting_member.set_bottom(1)
+			format_merge_fighting_member.set_top(0)
+			num_top = stage2_first_row_fightings_top+i*stage2_interval_fightings
+			merge_cells_top = template_stage2_merge % (num_top, num_top+1)
+			worksheet.merge_range(merge_cells_top, '', format_merge_fighting_member)
+
+			format_merge_fighting_member.set_bottom(0)
+			format_merge_fighting_member.set_top(1)
+			num_bottom = stage2_first_row_fightings_bottom + i * stage2_interval_fightings
+			merge_cells_bottom = template_stage2_merge % (num_bottom, num_bottom + 1)
+			worksheet.merge_range(merge_cells_bottom, '', format_merge_fighting_member)
+
+		#стадия 3
+		template_stage3_merge = 'AH%d:AT%d'
+		stage3_fightings = 4
+		stage3_first_row_fightings_top = 23
+		stage3_first_row_fightings_bottom = 46
+		stage3_interval_fightings = 40
+		for i in range(stage3_fightings):
+			format_merge_fighting_member.set_bottom(1)
+			format_merge_fighting_member.set_top(0)
+			num_top = stage3_first_row_fightings_top+i*stage3_interval_fightings
+			merge_cells_top = template_stage3_merge % (num_top, num_top+2)
+			worksheet.merge_range(merge_cells_top, '', format_merge_fighting_member)
+
+			format_merge_fighting_member.set_bottom(0)
+			format_merge_fighting_member.set_top(1)
+			num_bottom = stage3_first_row_fightings_bottom + i * stage3_interval_fightings
+			merge_cells_bottom = template_stage3_merge % (num_bottom, num_bottom + 2)
+			worksheet.merge_range(merge_cells_bottom, '', format_merge_fighting_member)
+
+		#стадия 4
+		template_stage4_merge = 'AO%d:BD%d'
+		stage4_fightings = 2
+		stage4_first_row_fightings_top = 33
+		stage4_first_row_fightings_bottom = 76
+		stage4_interval_fightings = 80
+
+		for i in range(stage4_fightings):
+			format_merge_fighting_member.set_bottom(1)
+			format_merge_fighting_member.set_top(0)
+			num_top = stage4_first_row_fightings_top+i*stage4_interval_fightings
+			merge_cells_top = template_stage4_merge % (num_top, num_top+2)
+			worksheet.merge_range(merge_cells_top, '', format_merge_fighting_member)
+
+			format_merge_fighting_member.set_bottom(0)
+			format_merge_fighting_member.set_top(1)
+			num_bottom = stage4_first_row_fightings_bottom + i * stage4_interval_fightings
+			merge_cells_bottom = template_stage4_merge % (num_bottom, num_bottom + 2)
+			worksheet.merge_range(merge_cells_bottom, '', format_merge_fighting_member)
+
+		#стадия 5
+		template_stage5_merge = 'AV%d:BJ%d'
+		stage5_first_row_fightings_top = 53
+		stage5_first_row_fightings_bottom = 136
+
+		format_merge_fighting_member.set_bottom(1)
+		format_merge_fighting_member.set_top(0)
+		num_top = stage5_first_row_fightings_top
+		merge_cells_top = template_stage5_merge % (num_top, num_top + 2)
+		worksheet.merge_range(merge_cells_top, '', format_merge_fighting_member)
+
+		format_merge_fighting_member.set_bottom(0)
+		format_merge_fighting_member.set_top(1)
+		num_bottom = stage5_first_row_fightings_bottom
+		merge_cells_bottom = template_stage5_merge % (num_bottom, num_bottom + 2)
+		worksheet.merge_range(merge_cells_bottom, '', format_merge_fighting_member)
+
+		#стадия 6
+		format_merge_fighting_member.set_bottom(1)
+		format_merge_fighting_member.set_top(0)
+		worksheet.merge_range('BC93:BN95', '', format_merge_fighting_member)
+
+		###################################################
+		#бордеры
+		###################################################
+		format_border_top = workbook.add_format({'top': 1})
+		format_border_bottom = workbook.add_format({'bottom': 1})
+
+		#стадия 1
+		for i in range(stage1_fightings):
+			row = stage1_first_row_fightings_top + 2 + i * stage1_interval_fightings
+			row_col_start = xl_cell_to_rowcol('C%d' % row)
+			row_col_end = xl_cell_to_rowcol('Z%d' % row)
+			for i in range(row_col_end[1] - row_col_start[1]):
+				pass
+				#col =
+				#worksheet.write(row, )
+
+			stage1_first_row_fightings_bottom = 23
+			stage1_interval_fightings = 10
+			template_stage1_border = 'C:Z'
+
+
 
 	def edit_pressed(self):
 
