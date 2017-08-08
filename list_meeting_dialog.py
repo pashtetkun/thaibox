@@ -493,12 +493,16 @@ class ListMeetingDialog(QDialog):
 		worksheet.set_column(rangeColPage2, widthColPage2)
 		worksheet.set_column(hiddenCol, None, None, {'hidden': True})
 
-		#format_no_borders = workbook.add_format({'border': 0})
-
 		#######################################
-		#объединение колонок в сетке жеребьевки
+		#объединение колонок в сетке жеребьевки и бордеры
 		#######################################
-		format_merge_fighting_member = workbook.add_format({'bg_color': 'white'})
+		format_merge_fighting_member = workbook.add_format({'bg_color': 'yellow'})
+		format_border_top = workbook.add_format({'top': 1})
+		format_border_bottom = workbook.add_format({'bottom': 1})
+		format_border_right = workbook.add_format({'right': 1})
+		format_border_result = workbook.add_format({'right': 1, 'top': 1, 'bottom': 1})
+		format_border_corner_top_right = workbook.add_format({'right': 1, 'top': 1})
+		format_border_corner_bottom_right = workbook.add_format({'right': 1, 'bottom': 1})
 
 		#стадия 1
 		template_stage1_merge = 'C%d:AA%d'
@@ -506,19 +510,35 @@ class ListMeetingDialog(QDialog):
 		stage1_first_row_fightings_top = 17
 		stage1_first_row_fightings_bottom = 23
 		stage1_interval_fightings = 10
-		#template_stage1_border = 'C:Z'
 		for i in range(stage1_fightings):
-			#format_merge_fighting_member.set_bottom(1)
-			#format_merge_fighting_member.set_top(0)
+			#участник 1
 			num_top = stage1_first_row_fightings_top+i*stage1_interval_fightings
 			merge_cells_top = template_stage1_merge % (num_top, num_top+1)
 			worksheet.merge_range(merge_cells_top, '', format_merge_fighting_member)
 
-			#format_merge_fighting_member.set_bottom(0)
-			#format_merge_fighting_member.set_top(1)
+			row = stage1_first_row_fightings_top + 2 + i * stage1_interval_fightings
+			row_col_start = xl_cell_to_rowcol('C%d' % row)
+			row_col_end = xl_cell_to_rowcol('Z%d' % row)
+			for j in range(row_col_end[1] - row_col_start[1] + 1):
+				col = row_col_start[1] + j
+				worksheet.write(row - 1, col, '', format_border_top)
+
+			#участник 2
 			num_bottom = stage1_first_row_fightings_bottom + i * stage1_interval_fightings
 			merge_cells_bottom = template_stage1_merge % (num_bottom, num_bottom + 1)
 			worksheet.merge_range(merge_cells_bottom, '', format_merge_fighting_member)
+
+			row = stage1_first_row_fightings_bottom - 1 + i * stage1_interval_fightings
+			row_col_start = xl_cell_to_rowcol('C%d' % row)
+			row_col_end = xl_cell_to_rowcol('Z%d' % row)
+			for j in range(row_col_end[1] - row_col_start[1] + 1):
+				col = row_col_start[1] + j
+				worksheet.write(row - 1, col, '', format_border_bottom)
+
+			#результат
+			row = stage1_first_row_fightings_top + 2 + i * stage1_interval_fightings
+			merge_cells_result1 = 'R%d:Z%d' % (row, row+3)
+			worksheet.merge_range(merge_cells_result1, '', format_border_result)
 
 		#стадия 2
 		template_stage2_merge = 'AA%d:AM%d'
@@ -527,17 +547,35 @@ class ListMeetingDialog(QDialog):
 		stage2_first_row_fightings_bottom = 31
 		stage2_interval_fightings = 20
 		for i in range(stage2_fightings):
-			format_merge_fighting_member.set_bottom(1)
-			format_merge_fighting_member.set_top(0)
+			#участник 1
 			num_top = stage2_first_row_fightings_top+i*stage2_interval_fightings
 			merge_cells_top = template_stage2_merge % (num_top, num_top+1)
 			worksheet.merge_range(merge_cells_top, '', format_merge_fighting_member)
 
-			format_merge_fighting_member.set_bottom(0)
-			format_merge_fighting_member.set_top(1)
+			row = stage2_first_row_fightings_top + 2 + i * stage2_interval_fightings
+			row_col_start = xl_cell_to_rowcol('AA%d' % row)
+			row_col_end = xl_cell_to_rowcol('AG%d' % row)
+			for j in range(row_col_end[1] - row_col_start[1] + 1):
+				col = row_col_start[1] + j
+				worksheet.write(row - 1, col, '', format_border_top)
+
+			#участник 2
 			num_bottom = stage2_first_row_fightings_bottom + i * stage2_interval_fightings
 			merge_cells_bottom = template_stage2_merge % (num_bottom, num_bottom + 1)
 			worksheet.merge_range(merge_cells_bottom, '', format_merge_fighting_member)
+
+			row = stage2_first_row_fightings_bottom - 1 + i * stage2_interval_fightings
+			row_col_start = xl_cell_to_rowcol('AA%d' % row)
+			row_col_end = xl_cell_to_rowcol('AG%d' % row)
+			for j in range(row_col_end[1] - row_col_start[1] + 1):
+				col = row_col_start[1] + j
+				worksheet.write(row - 1, col, '', format_border_bottom)
+
+			# результат
+			row1 = stage2_first_row_fightings_top + 2 + i * stage2_interval_fightings
+			row2 = stage2_first_row_fightings_bottom - 1 + i * stage2_interval_fightings
+			merge_cells_result2 = 'AB%d:AG%d' % (row1, row2)
+			worksheet.merge_range(merge_cells_result2, '', format_border_result)
 
 		#стадия 3
 		template_stage3_merge = 'AH%d:AT%d'
@@ -546,17 +584,47 @@ class ListMeetingDialog(QDialog):
 		stage3_first_row_fightings_bottom = 46
 		stage3_interval_fightings = 40
 		for i in range(stage3_fightings):
-			format_merge_fighting_member.set_bottom(1)
-			format_merge_fighting_member.set_top(0)
+			#участник 1
 			num_top = stage3_first_row_fightings_top+i*stage3_interval_fightings
 			merge_cells_top = template_stage3_merge % (num_top, num_top+2)
 			worksheet.merge_range(merge_cells_top, '', format_merge_fighting_member)
 
-			format_merge_fighting_member.set_bottom(0)
-			format_merge_fighting_member.set_top(1)
+			row = stage3_first_row_fightings_top + 2 + i * stage3_interval_fightings
+			row_col_start = xl_cell_to_rowcol('AH%d' % row)
+			row_col_end = xl_cell_to_rowcol('AN%d' % row)
+			for j in range(row_col_end[1] - row_col_start[1] + 1):
+				col = row_col_start[1] + j
+				worksheet.write(row, col, '', format_border_top)
+
+			#участник 2
 			num_bottom = stage3_first_row_fightings_bottom + i * stage3_interval_fightings
 			merge_cells_bottom = template_stage3_merge % (num_bottom, num_bottom + 2)
 			worksheet.merge_range(merge_cells_bottom, '', format_merge_fighting_member)
+
+			row = stage3_first_row_fightings_bottom - 1 + i * stage3_interval_fightings
+			row_col_start = xl_cell_to_rowcol('AH%d' % row)
+			row_col_end = xl_cell_to_rowcol('AN%d' % row)
+			for j in range(row_col_end[1] - row_col_start[1] + 1):
+				col = row_col_start[1] + j
+				worksheet.write(row - 1, col, '', format_border_bottom)
+
+			# результат
+			row = stage3_first_row_fightings_top + 11 + i * stage3_interval_fightings
+			merge_cells_result3 = 'AI%d:AN%d' % (row, row+3)
+			worksheet.merge_range(merge_cells_result3, '')
+
+			#правая граница
+			row1 = stage3_first_row_fightings_top + 1 * i * stage3_interval_fightings
+			row2 = stage3_first_row_fightings_bottom - 1 + i * stage3_interval_fightings
+			cell_template = 'AN%d'
+			for j in range(row2-row1+1):
+				format = format_border_right
+				if j == 0:
+					format == format_border_corner_top_right
+				if j == row2-row1:
+					format == format_border_corner_bottom_right
+				cell = cell_template % (row1+j)
+				worksheet.write(cell, '', format)
 
 		#стадия 4
 		template_stage4_merge = 'AO%d:BD%d'
@@ -566,14 +634,10 @@ class ListMeetingDialog(QDialog):
 		stage4_interval_fightings = 80
 
 		for i in range(stage4_fightings):
-			format_merge_fighting_member.set_bottom(1)
-			format_merge_fighting_member.set_top(0)
 			num_top = stage4_first_row_fightings_top+i*stage4_interval_fightings
 			merge_cells_top = template_stage4_merge % (num_top, num_top+2)
 			worksheet.merge_range(merge_cells_top, '', format_merge_fighting_member)
 
-			format_merge_fighting_member.set_bottom(0)
-			format_merge_fighting_member.set_top(1)
 			num_bottom = stage4_first_row_fightings_bottom + i * stage4_interval_fightings
 			merge_cells_bottom = template_stage4_merge % (num_bottom, num_bottom + 2)
 			worksheet.merge_range(merge_cells_bottom, '', format_merge_fighting_member)
@@ -583,43 +647,16 @@ class ListMeetingDialog(QDialog):
 		stage5_first_row_fightings_top = 53
 		stage5_first_row_fightings_bottom = 136
 
-		format_merge_fighting_member.set_bottom(1)
-		format_merge_fighting_member.set_top(0)
 		num_top = stage5_first_row_fightings_top
 		merge_cells_top = template_stage5_merge % (num_top, num_top + 2)
 		worksheet.merge_range(merge_cells_top, '', format_merge_fighting_member)
 
-		format_merge_fighting_member.set_bottom(0)
-		format_merge_fighting_member.set_top(1)
 		num_bottom = stage5_first_row_fightings_bottom
 		merge_cells_bottom = template_stage5_merge % (num_bottom, num_bottom + 2)
 		worksheet.merge_range(merge_cells_bottom, '', format_merge_fighting_member)
 
 		#стадия 6
-		format_merge_fighting_member.set_bottom(1)
-		format_merge_fighting_member.set_top(0)
 		worksheet.merge_range('BC93:BN95', '', format_merge_fighting_member)
-
-		###################################################
-		#бордеры
-		###################################################
-		format_border_top = workbook.add_format({'top': 1})
-		format_border_bottom = workbook.add_format({'bottom': 1})
-
-		#стадия 1
-		for i in range(stage1_fightings):
-			row = stage1_first_row_fightings_top + 2 + i * stage1_interval_fightings
-			row_col_start = xl_cell_to_rowcol('C%d' % row)
-			row_col_end = xl_cell_to_rowcol('Z%d' % row)
-			for i in range(row_col_end[1] - row_col_start[1]):
-				pass
-				#col =
-				#worksheet.write(row, )
-
-			stage1_first_row_fightings_bottom = 23
-			stage1_interval_fightings = 10
-			template_stage1_border = 'C:Z'
-
 
 
 	def edit_pressed(self):
