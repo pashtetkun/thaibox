@@ -507,9 +507,11 @@ class ListMeetingDialog(QDialog):
         format_border_top = workbook.add_format({'top': 1})
         format_border_bottom = workbook.add_format({'bottom': 1})
         format_border_right = workbook.add_format({'right': 1})
+        format_border_left = workbook.add_format({'left': 1})
         format_border_result = workbook.add_format({'right': 1, 'top': 1, 'bottom': 1})
         format_border_corner_top_right = workbook.add_format({'right': 1, 'top': 1})
         format_border_corner_bottom_right = workbook.add_format({'right': 1, 'bottom': 1})
+        format_border_all = workbook.add_format({'right': 1, 'top': 1, 'bottom': 1, 'left': 1})
 
         #стадия 1
         template_stage1_merge = 'C%d:AA%d'
@@ -764,6 +766,49 @@ class ListMeetingDialog(QDialog):
         worksheet.merge_range('AQ178:BN179', '', format_border_bottom)
         worksheet.merge_range('AO182:AP183', '4')
         worksheet.merge_range('AQ182:BN183', '', format_border_bottom)
+
+        ############################
+        #вторая страница
+        ############################
+
+        worksheet.merge_range('BT185:CS192', 'Название')
+        worksheet.merge_range('BQ195:BZ197', 'Место проведения')
+        worksheet.merge_range('CO195:CU197', 'Дата проведения')
+
+        worksheet.merge_range('BQ200:CU202', 'Стартовый протокол соревнований', format_border_all)
+        worksheet.merge_range('BQ203:BV205', 'Тайский бокс', format_border_left)
+        worksheet.merge_range('BW203:CN205', 'Категория')
+        worksheet.merge_range('CO203:CU205', '32 человека', format_border_right)
+
+        worksheet.merge_range('BQ206:BR208', '№ п/жр', format_border_all)
+        worksheet.merge_range('BS206:BZ208', 'Участник / команда', format_border_all)
+        worksheet.merge_range('CA206:CD208', 'Дата рождения', format_border_all)
+        worksheet.merge_range('CE206:CH208', 'Разряд', format_border_all)
+        worksheet.merge_range('CI206:CN208', 'Регион', format_border_all)
+        worksheet.merge_range('CO206:CU208', 'Тренер', format_border_all)
+
+        first_row = 209
+        for i in range(32):
+            row = first_row  + i * 5
+            worksheet.merge_range('BQ%d:BR%d' % (row, row+4), str(i+1), format_border_all)
+            worksheet.merge_range('BS%d:BZ%d' % (row, row+4), '', format_border_all)
+            worksheet.merge_range('CA%d:CD%d' % (row, row+4), '', format_border_all)
+            worksheet.merge_range('CE%d:CH%d' % (row, row+4), '', format_border_all)
+            worksheet.merge_range('CI%d:CN%d' % (row, row+4), '', format_border_all)
+            worksheet.merge_range('CO%d:CU%d' % (row, row+4), '', format_border_all)
+
+        worksheet.merge_range('BQ371:BX373', 'Главный судья')
+        worksheet.merge_range('BQ374:BX376', 'судья кат')
+        worksheet.merge_range('BQ377:BX379', 'Главный секретарь')
+        worksheet.merge_range('BQ380:BX382', 'судья кат')
+
+        worksheet.merge_range('CG371:CN373', 'Фамилия И.О.')
+        worksheet.merge_range('CG374:CN376', 'регион')
+        worksheet.merge_range('CG377:CN379', 'Фамилия И.О.')
+        worksheet.merge_range('CG380:CN382', 'регион')
+
+        worksheet.merge_range('CO379:CU382', 'Дата проведения мандатной комиссии')
+
 
 
 
