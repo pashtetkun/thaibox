@@ -737,6 +737,7 @@ class ListMeetingDialog(QDialog):
         worksheet.write('BC93', 'чемпион')
 
 
+
     def edit_pressed(self):
 
         # Get data from base
