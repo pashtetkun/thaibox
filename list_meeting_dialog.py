@@ -494,7 +494,14 @@ class ListMeetingDialog(QDialog):
         worksheet.set_column(hiddenCol, None, None, {'hidden': True})
 
         #######################################
-        #объединение колонок в сетке жеребьевки и бордеры
+        #шапка
+        #######################################
+        worksheet.merge_range('F1:BN8', 'Название')
+        worksheet.merge_range('F9:BN11', 'Дата и время')
+        worksheet.merge_range('F12:BN14', 'Весовая категория')
+
+        #######################################
+        #сетка жеребьевки
         #######################################
         format_merge_fighting_member = workbook.add_format({'bg_color': 'yellow'})
         format_border_top = workbook.add_format({'top': 1})
@@ -735,6 +742,29 @@ class ListMeetingDialog(QDialog):
             worksheet.write(row, col, '', format_border_top)
 
         worksheet.write('BC93', 'чемпион')
+
+        ##########################################
+        #судьи
+        ##########################################
+        worksheet.merge_range('C177:M178', 'Главный судья')
+        worksheet.merge_range('C179:M180', 'судья кат')
+        worksheet.merge_range('C181:M182', 'Главный секретарь')
+        worksheet.merge_range('C183:M184', 'судья кат')
+
+        worksheet.merge_range('AA177:AL178', 'Фамилия И.О.')
+        worksheet.merge_range('AA179:AL180', 'регион')
+        worksheet.merge_range('AA181:AL182', 'Фамилия И.О.')
+        worksheet.merge_range('AA183:AL184', 'регион')
+
+        worksheet.merge_range('AO170:AP171', '1')
+        worksheet.merge_range('AQ170:BN171', '', format_border_bottom)
+        worksheet.merge_range('AO174:AP175', '2')
+        worksheet.merge_range('AQ174:BN175', '', format_border_bottom)
+        worksheet.merge_range('AO178:AP179', '3')
+        worksheet.merge_range('AQ178:BN179', '', format_border_bottom)
+        worksheet.merge_range('AO182:AP183', '4')
+        worksheet.merge_range('AQ182:BN183', '', format_border_bottom)
+
 
 
 
