@@ -34,6 +34,16 @@ class Member():
         self.trainer = row[9]
         self.status = True
 
+    def get_short_name(self):
+        parts = self.fio.split(' ')
+        result = ''
+        for i, part in enumerate(parts):
+            if i == 0:
+                result += part + ' '
+                continue
+            result += part[0].capitalize() + "."
+        return result
+
 
 class Referee():
     def __init__(self, row):
@@ -42,6 +52,16 @@ class Referee():
         self.position_id = row[2]
         self.region_id = row[3]
         self.category_id = row[4]
+
+    def get_short_name(self):
+        parts = self.fio.split(' ')
+        result = ''
+        for i, part in enumerate(parts):
+            if i == 0:
+                result += part + ' '
+                continue
+            result += part[0].capitalize() + "."
+        return result
 
 
 class WeightCategory():
@@ -100,8 +120,30 @@ class Fighting():
             self.loser_id = row[7]
             self.weightcategory_id = row[8]
 
+
 class Ring():
     def __init__(self, row=[]):
+        if row:
+            self.id = row[0]
+            self.name = row[1]
+
+
+class RefereeCategory():
+    def __init__(self, row):
+        if row:
+            self.id = row[0]
+            self.name = row[1]
+
+
+class Region():
+    def __init__(self, row):
+        if row:
+            self.id = row[0]
+            self.name = row[1]
+
+
+class MemberCategory():
+    def __init__(self, row):
         if row:
             self.id = row[0]
             self.name = row[1]

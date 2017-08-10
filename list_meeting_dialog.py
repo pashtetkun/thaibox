@@ -496,14 +496,19 @@ class ListMeetingDialog(QDialog):
         #######################################
         #шапка
         #######################################
-        worksheet.merge_range('F1:BN8', 'Название')
-        worksheet.merge_range('F9:BN11', 'Дата и время')
-        worksheet.merge_range('F12:BN14', 'Весовая категория')
+        format_header_big = workbook.add_format({'font_name': 'Times New Roman', 'bold': True,
+                                             'align': 'center', 'valign': 'top', 'font_size': 11})
+        format_header_small = workbook.add_format({'font_name': 'Times New Roman', 'bold': True,
+                                                 'align': 'center', 'valign': 'top', 'font_size': 10})
+        worksheet.merge_range('F1:BN8', self.meeting.name, format_header_big)
+        worksheet.merge_range('F9:BN11', 'с %s по %s, %s' % (self.meeting.start_date, self.meeting.end_date,
+                                                             self.meeting.city), format_header_small)
+        worksheet.merge_range('F12:BN14', wcat.name, format_header_small)
 
         #######################################
         #сетка жеребьевки
         #######################################
-        format_merge_fighting_member = workbook.add_format({'bg_color': 'yellow'})
+        format_merge_fighting_member = workbook.add_format({'bg_color': 'white'})
         format_border_top = workbook.add_format({'top': 1})
         format_border_bottom = workbook.add_format({'bottom': 1})
         format_border_right = workbook.add_format({'right': 1})
@@ -748,15 +753,34 @@ class ListMeetingDialog(QDialog):
         ##########################################
         #судьи
         ##########################################
-        worksheet.merge_range('C177:M178', 'Главный судья')
-        worksheet.merge_range('C179:M180', 'судья кат')
-        worksheet.merge_range('C181:M182', 'Главный секретарь')
-        worksheet.merge_range('C183:M184', 'судья кат')
+        main_referee = self.dbm.get_referee(self.meeting.main_referee_id)
+        main_referee_category = self.dbm.get_referee_category(main_referee.category_id)
+        main_referee_region = self.dbm.get_region(main_referee.region_id)
+        main_clerk = self.dbm.get_referee(self.meeting.main_clerk_id)
+        main_clerk_category = self.dbm.get_referee_category(main_clerk.category_id)
+        main_clerk_region = self.dbm.get_region(main_clerk.region_id)
 
-        worksheet.merge_range('AA177:AL178', 'Фамилия И.О.')
-        worksheet.merge_range('AA179:AL180', 'регион')
-        worksheet.merge_range('AA181:AL182', 'Фамилия И.О.')
-        worksheet.merge_range('AA183:AL184', 'регион')
+        format_main_referee = workbook.add_format({'font_name': 'Times New Roman', 'bold': True,
+                                             'valign': 'bottom', 'font_size': 9})
+        format_main_referee_info = workbook.add_format({'font_name': 'Times New Roman', 'bold': False,
+                                                   'valign': 'bottom', 'font_size': 9})
+
+        format_main_clerk = workbook.add_format({'font_name': 'Times New Roman', 'bold': True,
+                                                   'valign': 'top', 'font_size': 9})
+
+        format_main_clerk_info = workbook.add_format({'font_name': 'Times New Roman', 'bold': False,
+                                                 'valign': 'bottom', 'font_size': 9})
+
+
+        worksheet.merge_range('C177:M178', 'Главный судья', format_main_referee)
+        worksheet.merge_range('C179:M180', 'судья кат ' + main_referee_category.name, format_main_referee_info)
+        worksheet.merge_range('C181:M182', 'Главный секретарь', format_main_clerk)
+        worksheet.merge_range('C183:M184', 'судья кат ' + main_clerk_category.name, format_main_clerk_info)
+
+        worksheet.merge_range('AA177:AL178', main_referee.get_short_name(), format_main_referee)
+        worksheet.merge_range('AA179:AL180', main_referee_region.name, format_main_referee_info)
+        worksheet.merge_range('AA181:AL182', main_clerk.get_short_name(), format_main_clerk)
+        worksheet.merge_range('AA183:AL184', main_clerk_region.name, format_main_clerk_info)
 
         worksheet.merge_range('AO170:AP171', '1')
         worksheet.merge_range('AQ170:BN171', '', format_border_bottom)
@@ -771,41 +795,84 @@ class ListMeetingDialog(QDialog):
         #вторая страница
         ############################
 
-        worksheet.merge_range('BT185:CS192', 'Название')
-        worksheet.merge_range('BQ195:BZ197', 'Место проведения')
-        worksheet.merge_range('CO195:CU197', 'Дата проведения')
+        format_table_header = workbook.add_format({'font_name': 'Times New Roman', 'bold': True,
+                                                   'align': 'center', 'valign': 'center', 'font_size': 12})
+        format_table_place = workbook.add_format({'font_name': 'Times New Roman', 'bold': False,
+                                                   'valign': 'bottom', 'font_size': 10})
+        format_table_date = workbook.add_format({'font_name': 'Times New Roman', 'bold': False,
+                                                   'align': 'right', 'valign': 'bottom', 'font_size': 10})
 
-        worksheet.merge_range('BQ200:CU202', 'Стартовый протокол соревнований', format_border_all)
-        worksheet.merge_range('BQ203:BV205', 'Тайский бокс', format_border_left)
-        worksheet.merge_range('BW203:CN205', 'Категория')
-        worksheet.merge_range('CO203:CU205', '32 человека', format_border_right)
+        worksheet.merge_range('BT185:CS192', self.meeting.name, format_table_header)
+        worksheet.merge_range('BQ195:BZ197', self.meeting.city, format_table_place)
+        worksheet.merge_range('CO195:CU197', 'с %s по %s' % (self.meeting.start_date, self.meeting.end_date),
+                              format_table_date)
 
-        worksheet.merge_range('BQ206:BR208', '№ п/жр', format_border_all)
-        worksheet.merge_range('BS206:BZ208', 'Участник / команда', format_border_all)
-        worksheet.merge_range('CA206:CD208', 'Дата рождения', format_border_all)
-        worksheet.merge_range('CE206:CH208', 'Разряд', format_border_all)
-        worksheet.merge_range('CI206:CN208', 'Регион', format_border_all)
-        worksheet.merge_range('CO206:CU208', 'Тренер', format_border_all)
+        format_table_protocol = workbook.add_format({'font_name': 'Times New Roman', 'bold': True,
+                                                   'align': 'center', 'valign': 'vcenter', 'font_size': 14, 'border': 1})
+        format_table_thaibox = workbook.add_format({'font_name': 'Times New Roman', 'bold': True,
+                                                     'align': 'center', 'valign': 'vcenter', 'font_size': 12,
+                                                     'left': 1})
+        format_table_wcat = workbook.add_format({'font_name': 'Times New Roman', 'bold': True,
+                                                    'align': 'center', 'valign': 'vcenter', 'font_size': 10,
+                                                    'top': 1, 'bottom': 1})
+        format_table_count = workbook.add_format({'font_name': 'Times New Roman', 'bold': True,
+                                                 'align': 'center', 'valign': 'vcenter', 'font_size': 10,
+                                                 'right': 1})
 
+
+        worksheet.merge_range('BQ200:CU202', 'Стартовый протокол соревнований', format_table_protocol)
+        worksheet.merge_range('BQ203:BV205', 'Тайский бокс', format_table_thaibox)
+        worksheet.merge_range('BW203:CN205', wcat.name, format_table_wcat)
+        worksheet.merge_range('CO203:CU205', '32 человека', format_table_count)
+
+        format_table_cell_center = workbook.add_format({'font_name': 'Times New Roman', 'bold': False,
+                                                  'align': 'center', 'valign': 'top', 'font_size': 10,
+                                                  'border': 1})
+        format_table_cell_left = workbook.add_format({'font_name': 'Times New Roman', 'bold': False,
+                                                 'valign': 'top', 'font_size': 10,
+                                                 'border': 1})
+
+        worksheet.merge_range('BQ206:BR208', '№ п/жр', format_table_cell_center)
+        worksheet.merge_range('BS206:BZ208', 'Участник / команда', format_table_cell_center)
+        worksheet.merge_range('CA206:CD208', 'Дата рождения', format_table_cell_center)
+        worksheet.merge_range('CE206:CH208', 'Разряд', format_table_cell_center)
+        worksheet.merge_range('CI206:CN208', 'Регион', format_table_cell_center)
+        worksheet.merge_range('CO206:CU208', 'Тренер', format_table_cell_center)
+
+        meet_members = self.dbm.get_meet_members(self.meeting.id)
         first_row = 209
         for i in range(32):
+            member_and_team = ''
+            birthday = ''
+            rank = ''
+            region = ''
+            trainer = ''
+            if i <= len(meet_members)-1:
+                member = meet_members[i]
+                member_and_team = '%s, %s' % (member.get_short_name(), member.club)
+                birthday = member.birthday
+                member_category = self.dbm.get_member_category(member.category)
+                rank = member_category.name
+                region = member.region.replace('\\', "")
+                trainer = member.trainer.replace('\\', "")
+
             row = first_row  + i * 5
-            worksheet.merge_range('BQ%d:BR%d' % (row, row+4), str(i+1), format_border_all)
-            worksheet.merge_range('BS%d:BZ%d' % (row, row+4), '', format_border_all)
-            worksheet.merge_range('CA%d:CD%d' % (row, row+4), '', format_border_all)
-            worksheet.merge_range('CE%d:CH%d' % (row, row+4), '', format_border_all)
-            worksheet.merge_range('CI%d:CN%d' % (row, row+4), '', format_border_all)
-            worksheet.merge_range('CO%d:CU%d' % (row, row+4), '', format_border_all)
+            worksheet.merge_range('BQ%d:BR%d' % (row, row+4), str(i+1), format_table_cell_center)
+            worksheet.merge_range('BS%d:BZ%d' % (row, row+4), member_and_team.replace('\\', ""), format_table_cell_left)
+            worksheet.merge_range('CA%d:CD%d' % (row, row+4), birthday, format_table_cell_center)
+            worksheet.merge_range('CE%d:CH%d' % (row, row+4), rank, format_table_cell_center)
+            worksheet.merge_range('CI%d:CN%d' % (row, row+4), region, format_table_cell_left)
+            worksheet.merge_range('CO%d:CU%d' % (row, row+4), trainer, format_table_cell_left)
 
-        worksheet.merge_range('BQ371:BX373', 'Главный судья')
-        worksheet.merge_range('BQ374:BX376', 'судья кат')
-        worksheet.merge_range('BQ377:BX379', 'Главный секретарь')
-        worksheet.merge_range('BQ380:BX382', 'судья кат')
+        worksheet.merge_range('BQ371:BX373', 'Главный судья', format_main_referee)
+        worksheet.merge_range('BQ374:BX376', 'судья кат ' + main_referee_category.name, format_main_referee_info)
+        worksheet.merge_range('BQ377:BX379', 'Главный секретарь', format_main_clerk)
+        worksheet.merge_range('BQ380:BX382', 'судья кат ' + main_clerk_category.name, format_main_clerk_info)
 
-        worksheet.merge_range('CG371:CN373', 'Фамилия И.О.')
-        worksheet.merge_range('CG374:CN376', 'регион')
-        worksheet.merge_range('CG377:CN379', 'Фамилия И.О.')
-        worksheet.merge_range('CG380:CN382', 'регион')
+        worksheet.merge_range('CG371:CN373', main_referee.get_short_name(), format_main_referee)
+        worksheet.merge_range('CG374:CN376', main_referee_region.name, format_main_referee_info)
+        worksheet.merge_range('CG377:CN379', main_clerk.get_short_name(), format_main_clerk)
+        worksheet.merge_range('CG380:CN382', main_clerk_region.name, format_main_clerk_info)
 
         worksheet.merge_range('CO379:CU382', 'Дата проведения мандатной комиссии')
 

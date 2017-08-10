@@ -160,3 +160,15 @@ class DbManager():
         params = (meeting_id, )
         row = self.database.select_one(sql, params)
         return row[0] if row else 0
+
+    def get_referee_category(self, id):
+        row = self.database.select_one('SELECT * FROM refereecat WHERE id=?', (id,))
+        return RefereeCategory(row) if row else None
+
+    def get_region(self, id):
+        row = self.database.select_one('SELECT * FROM region WHERE id=?', (id,))
+        return Region(row) if row else None
+
+    def get_member_category(self, id):
+        row = self.database.select_one('SELECT * FROM category WHERE id=?', (id,))
+        return MemberCategory(row) if row else None
