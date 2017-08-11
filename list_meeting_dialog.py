@@ -129,7 +129,6 @@ class ListMeetingDialog(QDialog):
         ###############################
         ### Список участников по рингам
         ###############################
-        all_members = self.dbm.get_all_members()
         weight_categories = self.dbm.get_all_weight_categories()
         self.members_dict = self.dbm.get_all_members_dict()
         ringscount = len(rings)
@@ -194,10 +193,10 @@ class ListMeetingDialog(QDialog):
                         fighting = fightings_by_ring[y]
                     #for meet in members:
                         # print(meet)
-                        member_a = next((m for m in all_members if m.id == fighting.member_a_id), None)
+                        member_a = self.members_dict.get(fighting.member_a_id, None)
                         member_b = None
                         if fighting.member_b_id:
-                            member_b = next((m for m in all_members if m.id == fighting.member_b_id), None)
+                            member_b = self.members_dict.get(fighting.member_b_id, None)
                         weight_category = next((w for w in weight_categories if w.id == member_a.weight_id), None)
 
                         worksheet.write_string(row, 1, str(iterator), formatmergeH(row, 'B:B', 'Times New Roman', '12', 'black', True, False, 0, 'center', 'vcenter', 33, 3.7))
@@ -458,13 +457,11 @@ class ListMeetingDialog(QDialog):
         pathDrawing = self.name.replace("\\", "") + '_сетки жеребьевки.xlsx'
         workbook = xlsxwriter.Workbook(pathDrawing)
 
-        #fightings = self.dbm.get_fightings_by_meeting(meeting.id)
-        #members = self.dbm.get_meet_members(meeting.id)
-        #weight_categories = self.dbm.get_all_weight_categories()
-
-        #fighting_service
         for wcat in active_weight_categories:
-            self.create_drawing_sheet(workbook, wcat)
+            try:
+                self.create_drawing_sheet(workbook, wcat)
+            except Exception as ex:
+                print(ex)
         workbook.close()
 
     def create_drawing_sheet(self, workbook, wcat):
@@ -537,10 +534,13 @@ class ListMeetingDialog(QDialog):
         fr_round1 = 16
         fightings1 = fightings_by_round.get(fr_round1, [])
         for i in range(stage1_fightings):
+            fighting = fightings1[i] if i <= len(fightings1) - 1 else None
+            member1 = self.members_dict.get(fighting.member_a_id, None) if fighting else None
+            member1_fio = member1.get_short_name() if member1 else ''
             #участник 1
             num_top = stage1_first_row_fightings_top+i*stage1_interval_fightings
             merge_cells_top = template_stage1_merge % (num_top, num_top+1)
-            worksheet.merge_range(merge_cells_top, '', format_merge_fighting_member)
+            worksheet.merge_range(merge_cells_top, member1_fio, format_merge_fighting_member)
 
             row = stage1_first_row_fightings_top + 2 + i * stage1_interval_fightings
             row_col_start = xl_cell_to_rowcol('C%d' % row)
@@ -550,9 +550,11 @@ class ListMeetingDialog(QDialog):
                 worksheet.write(row - 1, col, '', format_border_top)
 
             #участник 2
+            member2 = self.members_dict.get(fighting.member_b_id, None) if fighting else None
+            member2_fio = member2.get_short_name() if member2 else ''
             num_bottom = stage1_first_row_fightings_bottom + i * stage1_interval_fightings
             merge_cells_bottom = template_stage1_merge % (num_bottom, num_bottom + 1)
-            worksheet.merge_range(merge_cells_bottom, '', format_merge_fighting_member)
+            worksheet.merge_range(merge_cells_bottom, member2_fio, format_merge_fighting_member)
 
             row = stage1_first_row_fightings_bottom - 1 + i * stage1_interval_fightings
             row_col_start = xl_cell_to_rowcol('C%d' % row)
@@ -575,10 +577,13 @@ class ListMeetingDialog(QDialog):
         fr_round2 = 8
         fightings2 = fightings_by_round.get(fr_round2, [])
         for i in range(stage2_fightings):
+            fighting = fightings2[i] if i <= len(fightings2) - 1 else None
+            member1 = self.members_dict.get(fighting.member_a_id, None) if fighting else None
+            member1_fio = member1.get_short_name() if member1 else ''
             #участник 1
             num_top = stage2_first_row_fightings_top+i*stage2_interval_fightings
             merge_cells_top = template_stage2_merge % (num_top, num_top+1)
-            worksheet.merge_range(merge_cells_top, '', format_merge_fighting_member)
+            worksheet.merge_range(merge_cells_top, member1_fio, format_merge_fighting_member)
 
             row = stage2_first_row_fightings_top + 2 + i * stage2_interval_fightings
             row_col_start = xl_cell_to_rowcol('AA%d' % row)
@@ -588,9 +593,11 @@ class ListMeetingDialog(QDialog):
                 worksheet.write(row - 1, col, '', format_border_top)
 
             #участник 2
+            member2 = self.members_dict.get(fighting.member_b_id, None) if fighting else None
+            member2_fio = member2.get_short_name() if member2 else ''
             num_bottom = stage2_first_row_fightings_bottom + i * stage2_interval_fightings
             merge_cells_bottom = template_stage2_merge % (num_bottom, num_bottom + 1)
-            worksheet.merge_range(merge_cells_bottom, '', format_merge_fighting_member)
+            worksheet.merge_range(merge_cells_bottom, member2_fio, format_merge_fighting_member)
 
             row = stage2_first_row_fightings_bottom - 1 + i * stage2_interval_fightings
             row_col_start = xl_cell_to_rowcol('AA%d' % row)
@@ -614,10 +621,13 @@ class ListMeetingDialog(QDialog):
         fr_round3 = 4
         fightings3 = fightings_by_round.get(fr_round3, [])
         for i in range(stage3_fightings):
+            fighting = fightings3[i] if i <= len(fightings3) - 1 else None
+            member1 = self.members_dict.get(fighting.member_a_id, None) if fighting else None
+            member1_fio = member1.get_short_name() if member1 else ''
             #участник 1
             num_top = stage3_first_row_fightings_top+i*stage3_interval_fightings
             merge_cells_top = template_stage3_merge % (num_top, num_top+2)
-            worksheet.merge_range(merge_cells_top, '', format_merge_fighting_member)
+            worksheet.merge_range(merge_cells_top, member1_fio, format_merge_fighting_member)
 
             row = stage3_first_row_fightings_top + 2 + i * stage3_interval_fightings
             row_col_start = xl_cell_to_rowcol('AH%d' % row)
@@ -627,9 +637,11 @@ class ListMeetingDialog(QDialog):
                 worksheet.write(row, col, '', format_border_top)
 
             #участник 2
+            member2 = self.members_dict.get(fighting.member_b_id, None) if fighting else None
+            member2_fio = member2.get_short_name() if member2 else ''
             num_bottom = stage3_first_row_fightings_bottom + i * stage3_interval_fightings
             merge_cells_bottom = template_stage3_merge % (num_bottom, num_bottom + 2)
-            worksheet.merge_range(merge_cells_bottom, '', format_merge_fighting_member)
+            worksheet.merge_range(merge_cells_bottom, member2_fio, format_merge_fighting_member)
 
             row = stage3_first_row_fightings_bottom - 1 + i * stage3_interval_fightings
             row_col_start = xl_cell_to_rowcol('AH%d' % row)
@@ -720,10 +732,13 @@ class ListMeetingDialog(QDialog):
         stage5_first_row_fightings_bottom = 136
         fr_round5 = 1
         fightings5 = fightings_by_round.get(fr_round5, [])
+        fighting = fightings5[0] if fightings5 else None
+        member1 = self.members_dict.get(fighting.member_a_id, None) if fighting else None
+        member1_fio = member1.get_short_name() if member1 else ''
         #участник 1
         num_top = stage5_first_row_fightings_top
         merge_cells_top = template_stage5_merge % (num_top, num_top + 2)
-        worksheet.merge_range(merge_cells_top, '', format_merge_fighting_member)
+        worksheet.merge_range(merge_cells_top, member1_fio, format_merge_fighting_member)
 
         row = stage5_first_row_fightings_top + 2
         row_col_start = xl_cell_to_rowcol('AV%d' % row)
@@ -733,9 +748,11 @@ class ListMeetingDialog(QDialog):
             worksheet.write(row, col, '', format_border_top)
 
         #участник 2
+        member2 = self.members_dict.get(fighting.member_b_id, None) if fighting else None
+        member2_fio = member2.get_short_name() if member2 else ''
         num_bottom = stage5_first_row_fightings_bottom
         merge_cells_bottom = template_stage5_merge % (num_bottom, num_bottom + 2)
-        worksheet.merge_range(merge_cells_bottom, '', format_merge_fighting_member)
+        worksheet.merge_range(merge_cells_bottom, member2_fio, format_merge_fighting_member)
 
         row = stage5_first_row_fightings_bottom - 1
         row_col_start = xl_cell_to_rowcol('AV%d' % row)

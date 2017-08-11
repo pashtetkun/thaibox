@@ -23,16 +23,16 @@ class Member():
 
     def __init__(self, row):
         self.id = row[0]
-        self.fio = row[1]
+        self.fio = row[1].replace("\\", "")
         self.birthday = row[2]
         self.sex_id = row[3]
         self.weight_id = row[4]
         self.category = row[5]
-        self.club = row[6]
-        self.region = row[7]
-        self.city = row[8]
-        self.trainer = row[9]
-        self.status = True
+        self.club = row[6].replace("\\", "")
+        self.region = row[7].replace("\\", "")
+        self.city = row[8].replace("\\", "")
+        self.trainer = row[9].replace("\\", "")
+        self.status = None
 
     def get_short_name(self):
         parts = self.fio.split(' ')
