@@ -14,6 +14,13 @@ class DbManager():
             members.append(Member(row))
         return members
 
+    def get_all_members_dict(self):
+        members_dict = {}
+        members = self.get_all_members()
+        for member in members:
+            members_dict[member.id] = member
+        return members_dict
+
     def get_all_referees(self):
         referees =[]
         rows = self.database.select("SELECT * FROM referee")
