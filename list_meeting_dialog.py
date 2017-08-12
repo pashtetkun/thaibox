@@ -39,6 +39,7 @@ class ListMeetingDialog(QDialog):
 
         self.fighting_service = None
         self.members_dict = {}
+        self.meet_members = []
 
         '''# TODO: Заполнить список соревнований'''
         database = db()
@@ -453,6 +454,7 @@ class ListMeetingDialog(QDialog):
     def export_drawing(self, meeting):
         self.fighting_service = FightingsService(meeting)
         active_weight_categories = self.fighting_service.get_active_weight_categories()
+        self.meet_members = self.dbm.get_meet_members(meeting.id)
 
         pathDrawing = self.name.replace("\\", "") + '_сетки жеребьевки.xlsx'
         workbook = xlsxwriter.Workbook(pathDrawing)
@@ -463,12 +465,13 @@ class ListMeetingDialog(QDialog):
             except Exception as ex:
                 print(ex)
         workbook.close()
+        print('сетки жеребьевки выведены')
 
     def create_drawing_sheet(self, workbook, wcat):
         sheet_name = wcat.name if len(wcat.name) < 31 else wcat.name[:31]
         worksheet = workbook.add_worksheet(sheet_name)
 
-        print(wcat.name)
+        #print(wcat.name)
 
         widthColPage1 = 0.92  # ширина колонок на первой странице
         widthColPage2 = 2.43  # ширина колонок на второй странице
@@ -482,7 +485,7 @@ class ListMeetingDialog(QDialog):
         cell_right_top = xl_cell_to_rowcol('A387')
         cell_left_bottom = xl_cell_to_rowcol('C387')
         cell_right_bottom = xl_cell_to_rowcol('CU387')
-        print(cell_left_top, cell_right_top, cell_left_bottom, cell_right_bottom)
+        #print(cell_left_top, cell_right_top, cell_left_bottom, cell_right_bottom)
 
         worksheet.hide_gridlines(2)
 
@@ -879,7 +882,7 @@ class ListMeetingDialog(QDialog):
         worksheet.merge_range('CI206:CN208', 'Регион', format_table_cell_center)
         worksheet.merge_range('CO206:CU208', 'Тренер', format_table_cell_center)
 
-        meet_members = self.dbm.get_meet_members(self.meeting.id)
+        meet_members_in_weight = [m for m in self.meet_members if m.weight_id == wcat.id]
         first_row = 209
         for i in range(32):
             member_and_team = ''
@@ -887,8 +890,8 @@ class ListMeetingDialog(QDialog):
             rank = ''
             region = ''
             trainer = ''
-            if i <= len(meet_members)-1:
-                member = meet_members[i]
+            if i <= len(meet_members_in_weight)-1:
+                member = meet_members_in_weight[i]
                 member_and_team = '%s, %s' % (member.get_short_name(), member.club)
                 birthday = member.birthday
                 member_category = self.dbm.get_member_category(member.category)
