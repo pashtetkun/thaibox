@@ -179,3 +179,17 @@ class DbManager():
     def get_member_category(self, id):
         row = self.database.select_one('SELECT * FROM category WHERE id=?', (id,))
         return MemberCategory(row) if row else None
+
+    def get_all_member_categories(self):
+        categories = []
+        rows = self.database.select("SELECT * FROM category")
+        for row in rows:
+            categories.append(MemberCategory(row))
+        return categories
+
+    def get_all_member_categories_dict(self):
+        categories_dict = {}
+        categories = self.get_all_member_categories()
+        for category in categories:
+            categories_dict[category.id] = category
+        return categories_dict

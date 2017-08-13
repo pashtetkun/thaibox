@@ -40,6 +40,7 @@ class ListMeetingDialog(QDialog):
         self.fighting_service = None
         self.members_dict = {}
         self.meet_members = []
+        self.categories_dict = {}
 
         '''# TODO: Заполнить список соревнований'''
         database = db()
@@ -455,6 +456,7 @@ class ListMeetingDialog(QDialog):
         self.fighting_service = FightingsService(meeting)
         active_weight_categories = self.fighting_service.get_active_weight_categories()
         self.meet_members = self.dbm.get_meet_members(meeting.id)
+        self.categories_dict = self.dbm.get_all_member_categories_dict()
 
         pathDrawing = self.name.replace("\\", "") + '_сетки жеребьевки.xlsx'
         workbook = xlsxwriter.Workbook(pathDrawing)
@@ -513,6 +515,7 @@ class ListMeetingDialog(QDialog):
         #сетка жеребьевки
         #######################################
         format_merge_fighting_member = workbook.add_format({'bg_color': 'white'})
+        format_result = workbook.add_format({'bg_color': 'white', 'align': 'right', 'valign': 'vcenter'})
         format_border_top = workbook.add_format({'top': 1})
         format_border_bottom = workbook.add_format({'bottom': 1})
         format_border_right = workbook.add_format({'right': 1})
@@ -528,261 +531,73 @@ class ListMeetingDialog(QDialog):
         fr_rounds.sort()
         fr_rounds.reverse()
 
+        def draw_stage(worksheet, fr_round, template_member_merge, row_member1, row_member2, member_h, row_interval,
+                       col_border_start, col_border_end, template_result_merge, bottom_result_row):
+            fightings_by_round = self.fighting_service.fightings_info[wcat.id].fightings_by_round
+            fightings = fightings_by_round.get(fr_round, [])
+            for i in range(fr_round):
+                fighting = fightings[i] if i <= len(fightings) - 1 else None
+
+                # участник 1
+                member1 = self.members_dict.get(fighting.member_a_id, None) if fighting else None
+                member1_fio = member1.get_short_name() if member1 else ''
+                num_top = row_member1 + i * row_interval
+                merge_cells_top = template_member_merge % (num_top, num_top + member_h - 1)
+                worksheet.merge_range(merge_cells_top, member1_fio, format_merge_fighting_member)
+
+                # участник 2
+                member2 = self.members_dict.get(fighting.member_b_id, None) if fighting else None
+                member2_fio = member2.get_short_name() if member2 else ''
+                num_bottom = row_member2 + i * row_interval
+                merge_cells_bottom = template_member_merge % (num_bottom, num_bottom + member_h - 1)
+                worksheet.merge_range(merge_cells_bottom, member2_fio, format_merge_fighting_member)
+
+                # результат
+                row = bottom_result_row + i * row_interval
+                merge_cells_result = template_result_merge % (row - 3, row)
+                worksheet.merge_range(merge_cells_result, '', format_result)
+
+                #граница - участник 1
+                row = row_member1 + member_h + i * row_interval
+                row_col_start = xl_cell_to_rowcol('%s%d' % (col_border_start, row))
+                row_col_end = xl_cell_to_rowcol('%s%d' % (col_border_end, row))
+                for j in range(row_col_end[1] - row_col_start[1] + 1):
+                    col = row_col_start[1] + j
+                    worksheet.write(row - 1, col, '', format_border_top)
+
+                #граница - участник 2
+                row = row_member2 - 1 + i * row_interval
+                row_col_start = xl_cell_to_rowcol('%s%d' % (col_border_start, row))
+                row_col_end = xl_cell_to_rowcol('%s%d' % (col_border_end, row))
+                for j in range(row_col_end[1] - row_col_start[1] + 1):
+                    col = row_col_start[1] + j
+                    worksheet.write(row - 1, col, '', format_border_bottom)
+
+                # правая граница
+                row1 = row_member1 + member_h + i * row_interval
+                row2 = row_member2 - 1 + i * row_interval
+                for j in range(row2 - row1 + 1):
+                    format = format_border_right
+                    cell = '%s%d' % (col_border_end, (row1 + j))
+                    worksheet.write(cell, '', format)
+
+
         #стадия 1
-        template_stage1_merge = 'C%d:AA%d'
-        stage1_fightings = 16
-        stage1_first_row_fightings_top = 17
-        stage1_first_row_fightings_bottom = 23
-        stage1_interval_fightings = 10
-        fr_round1 = 16
-        fightings1 = fightings_by_round.get(fr_round1, [])
-        for i in range(stage1_fightings):
-            fighting = fightings1[i] if i <= len(fightings1) - 1 else None
-            member1 = self.members_dict.get(fighting.member_a_id, None) if fighting else None
-            member1_fio = member1.get_short_name() if member1 else ''
-            #участник 1
-            num_top = stage1_first_row_fightings_top+i*stage1_interval_fightings
-            merge_cells_top = template_stage1_merge % (num_top, num_top+1)
-            worksheet.merge_range(merge_cells_top, member1_fio, format_merge_fighting_member)
-
-            row = stage1_first_row_fightings_top + 2 + i * stage1_interval_fightings
-            row_col_start = xl_cell_to_rowcol('C%d' % row)
-            row_col_end = xl_cell_to_rowcol('Z%d' % row)
-            for j in range(row_col_end[1] - row_col_start[1] + 1):
-                col = row_col_start[1] + j
-                worksheet.write(row - 1, col, '', format_border_top)
-
-            #участник 2
-            member2 = self.members_dict.get(fighting.member_b_id, None) if fighting else None
-            member2_fio = member2.get_short_name() if member2 else ''
-            num_bottom = stage1_first_row_fightings_bottom + i * stage1_interval_fightings
-            merge_cells_bottom = template_stage1_merge % (num_bottom, num_bottom + 1)
-            worksheet.merge_range(merge_cells_bottom, member2_fio, format_merge_fighting_member)
-
-            row = stage1_first_row_fightings_bottom - 1 + i * stage1_interval_fightings
-            row_col_start = xl_cell_to_rowcol('C%d' % row)
-            row_col_end = xl_cell_to_rowcol('Z%d' % row)
-            for j in range(row_col_end[1] - row_col_start[1] + 1):
-                col = row_col_start[1] + j
-                worksheet.write(row - 1, col, '', format_border_bottom)
-
-            #результат
-            row = stage1_first_row_fightings_top + 2 + i * stage1_interval_fightings
-            merge_cells_result1 = 'R%d:Z%d' % (row, row+3)
-            worksheet.merge_range(merge_cells_result1, '', format_border_result)
+        draw_stage(worksheet, 16, 'C%d:AA%d', 17, 23, 2, 10, 'C', 'Z', 'R%d:Z%d', 22)
 
         #стадия 2
-        template_stage2_merge = 'AA%d:AM%d'
-        stage2_fightings = 8
-        stage2_first_row_fightings_top = 19
-        stage2_first_row_fightings_bottom = 31
-        stage2_interval_fightings = 20
-        fr_round2 = 8
-        fightings2 = fightings_by_round.get(fr_round2, [])
-        for i in range(stage2_fightings):
-            fighting = fightings2[i] if i <= len(fightings2) - 1 else None
-            member1 = self.members_dict.get(fighting.member_a_id, None) if fighting else None
-            member1_fio = member1.get_short_name() if member1 else ''
-            #участник 1
-            num_top = stage2_first_row_fightings_top+i*stage2_interval_fightings
-            merge_cells_top = template_stage2_merge % (num_top, num_top+1)
-            worksheet.merge_range(merge_cells_top, member1_fio, format_merge_fighting_member)
-
-            row = stage2_first_row_fightings_top + 2 + i * stage2_interval_fightings
-            row_col_start = xl_cell_to_rowcol('AA%d' % row)
-            row_col_end = xl_cell_to_rowcol('AG%d' % row)
-            for j in range(row_col_end[1] - row_col_start[1] + 1):
-                col = row_col_start[1] + j
-                worksheet.write(row - 1, col, '', format_border_top)
-
-            #участник 2
-            member2 = self.members_dict.get(fighting.member_b_id, None) if fighting else None
-            member2_fio = member2.get_short_name() if member2 else ''
-            num_bottom = stage2_first_row_fightings_bottom + i * stage2_interval_fightings
-            merge_cells_bottom = template_stage2_merge % (num_bottom, num_bottom + 1)
-            worksheet.merge_range(merge_cells_bottom, member2_fio, format_merge_fighting_member)
-
-            row = stage2_first_row_fightings_bottom - 1 + i * stage2_interval_fightings
-            row_col_start = xl_cell_to_rowcol('AA%d' % row)
-            row_col_end = xl_cell_to_rowcol('AG%d' % row)
-            for j in range(row_col_end[1] - row_col_start[1] + 1):
-                col = row_col_start[1] + j
-                worksheet.write(row - 1, col, '', format_border_bottom)
-
-            # результат
-            row1 = stage2_first_row_fightings_top + 2 + i * stage2_interval_fightings
-            row2 = stage2_first_row_fightings_bottom - 1 + i * stage2_interval_fightings
-            merge_cells_result2 = 'AB%d:AG%d' % (row1, row2)
-            worksheet.merge_range(merge_cells_result2, '', format_border_result)
+        draw_stage(worksheet, 8, 'AA%d:AM%d', 19, 31, 2, 20, 'AA', 'AG', 'AB%d:AG%d', 27)
 
         #стадия 3
-        template_stage3_merge = 'AH%d:AT%d'
-        stage3_fightings = 4
-        stage3_first_row_fightings_top = 23
-        stage3_first_row_fightings_bottom = 46
-        stage3_interval_fightings = 40
-        fr_round3 = 4
-        fightings3 = fightings_by_round.get(fr_round3, [])
-        for i in range(stage3_fightings):
-            fighting = fightings3[i] if i <= len(fightings3) - 1 else None
-            member1 = self.members_dict.get(fighting.member_a_id, None) if fighting else None
-            member1_fio = member1.get_short_name() if member1 else ''
-            #участник 1
-            num_top = stage3_first_row_fightings_top+i*stage3_interval_fightings
-            merge_cells_top = template_stage3_merge % (num_top, num_top+2)
-            worksheet.merge_range(merge_cells_top, member1_fio, format_merge_fighting_member)
-
-            row = stage3_first_row_fightings_top + 2 + i * stage3_interval_fightings
-            row_col_start = xl_cell_to_rowcol('AH%d' % row)
-            row_col_end = xl_cell_to_rowcol('AN%d' % row)
-            for j in range(row_col_end[1] - row_col_start[1] + 1):
-                col = row_col_start[1] + j
-                worksheet.write(row, col, '', format_border_top)
-
-            #участник 2
-            member2 = self.members_dict.get(fighting.member_b_id, None) if fighting else None
-            member2_fio = member2.get_short_name() if member2 else ''
-            num_bottom = stage3_first_row_fightings_bottom + i * stage3_interval_fightings
-            merge_cells_bottom = template_stage3_merge % (num_bottom, num_bottom + 2)
-            worksheet.merge_range(merge_cells_bottom, member2_fio, format_merge_fighting_member)
-
-            row = stage3_first_row_fightings_bottom - 1 + i * stage3_interval_fightings
-            row_col_start = xl_cell_to_rowcol('AH%d' % row)
-            row_col_end = xl_cell_to_rowcol('AN%d' % row)
-            for j in range(row_col_end[1] - row_col_start[1] + 1):
-                col = row_col_start[1] + j
-                worksheet.write(row - 1, col, '', format_border_bottom)
-
-            # результат
-            row = stage3_first_row_fightings_top + 11 + i * stage3_interval_fightings
-            merge_cells_result3 = 'AI%d:AN%d' % (row, row+3)
-            worksheet.merge_range(merge_cells_result3, '')
-
-            #правая граница
-            row1 = stage3_first_row_fightings_top + 1 + i * stage3_interval_fightings
-            row2 = stage3_first_row_fightings_bottom - 1 + i * stage3_interval_fightings
-            cell_template = 'AN%d'
-            for j in range(row2-row1+1):
-                format = format_border_right
-                if j == 0:
-                    format == format_border_corner_top_right
-                if j == row2-row1:
-                    format == format_border_corner_bottom_right
-                cell = cell_template % (row1+j)
-                worksheet.write(cell, '', format)
+        draw_stage(worksheet, 4, 'AH%d:AT%d', 23, 46, 3, 40, 'AH', 'AN', 'AI%d:AN%d', 37)
 
         #стадия 4
-        template_stage4_merge = 'AO%d:BA%d'
-        stage4_fightings = 2
-        stage4_first_row_fightings_top = 33
-        stage4_first_row_fightings_bottom = 76
-        stage4_interval_fightings = 80
-        fr_round4 = 2
-        fightings4 = fightings_by_round.get(fr_round4, [])
-        for i in range(stage4_fightings):
-            fighting = fightings4[i] if i <= len(fightings4)-1 else None
-            member1 = self.members_dict.get(fighting.member_a_id, None) if fighting else None
-            member1_fio = member1.get_short_name() if member1 else ''
-            #участник 1
-            num_top = stage4_first_row_fightings_top+i*stage4_interval_fightings
-            merge_cells_top = template_stage4_merge % (num_top, num_top+2)
-            worksheet.merge_range(merge_cells_top, member1_fio, format_merge_fighting_member)
-
-            row = stage4_first_row_fightings_top + 2 + i * stage4_interval_fightings
-            row_col_start = xl_cell_to_rowcol('AO%d' % row)
-            row_col_end = xl_cell_to_rowcol('AU%d' % row)
-            for j in range(row_col_end[1] - row_col_start[1] + 1):
-                col = row_col_start[1] + j
-                worksheet.write(row, col, '', format_border_top)
-
-            #участник 2
-            member2 = self.members_dict.get(fighting.member_b_id, None) if fighting else None
-            member2_fio = member2.get_short_name() if member2 else ''
-            num_bottom = stage4_first_row_fightings_bottom + i * stage4_interval_fightings
-            merge_cells_bottom = template_stage4_merge % (num_bottom, num_bottom + 2)
-            worksheet.merge_range(merge_cells_bottom, member2_fio, format_merge_fighting_member)
-
-            row = stage4_first_row_fightings_bottom - 1 + i * stage4_interval_fightings
-            row_col_start = xl_cell_to_rowcol('AO%d' % row)
-            row_col_end = xl_cell_to_rowcol('AU%d' % row)
-            for j in range(row_col_end[1] - row_col_start[1] + 1):
-                col = row_col_start[1] + j
-                worksheet.write(row - 1, col, '', format_border_bottom)
-
-            # результат
-            row = stage4_first_row_fightings_top + 21 + i * stage4_interval_fightings
-            merge_cells_result4 = 'AI%d:AN%d' % (row, row + 3)
-            worksheet.merge_range(merge_cells_result4, '')
-
-            # правая граница
-            row1 = stage4_first_row_fightings_top + 1 + i * stage4_interval_fightings
-            row2 = stage4_first_row_fightings_bottom - 1 + i * stage4_interval_fightings
-            cell_template = 'AU%d'
-            for j in range(row2 - row1 + 1):
-                format = format_border_right
-                if j == 0:
-                    format == format_border_corner_top_right
-                if j == row2 - row1:
-                    format == format_border_corner_bottom_right
-                cell = cell_template % (row1 + j)
-                worksheet.write(cell, '', format)
-
-
+        draw_stage(worksheet, 2, 'AO%d:BA%d', 33, 76, 3, 80, 'AO', 'AU', 'AO%d:AU%d', 57)
 
         #стадия 5
-        template_stage5_merge = 'AV%d:BJ%d'
-        stage5_first_row_fightings_top = 53
-        stage5_first_row_fightings_bottom = 136
-        fr_round5 = 1
-        fightings5 = fightings_by_round.get(fr_round5, [])
-        fighting = fightings5[0] if fightings5 else None
-        member1 = self.members_dict.get(fighting.member_a_id, None) if fighting else None
-        member1_fio = member1.get_short_name() if member1 else ''
-        #участник 1
-        num_top = stage5_first_row_fightings_top
-        merge_cells_top = template_stage5_merge % (num_top, num_top + 2)
-        worksheet.merge_range(merge_cells_top, member1_fio, format_merge_fighting_member)
+        draw_stage(worksheet, 1, 'AV%d:BJ%d', 53, 136, 3, 0, 'AV', 'BB', 'AT%d:BB%d', 97)
 
-        row = stage5_first_row_fightings_top + 2
-        row_col_start = xl_cell_to_rowcol('AV%d' % row)
-        row_col_end = xl_cell_to_rowcol('BB%d' % row)
-        for j in range(row_col_end[1] - row_col_start[1] + 1):
-            col = row_col_start[1] + j
-            worksheet.write(row, col, '', format_border_top)
-
-        #участник 2
-        member2 = self.members_dict.get(fighting.member_b_id, None) if fighting else None
-        member2_fio = member2.get_short_name() if member2 else ''
-        num_bottom = stage5_first_row_fightings_bottom
-        merge_cells_bottom = template_stage5_merge % (num_bottom, num_bottom + 2)
-        worksheet.merge_range(merge_cells_bottom, member2_fio, format_merge_fighting_member)
-
-        row = stage5_first_row_fightings_bottom - 1
-        row_col_start = xl_cell_to_rowcol('AV%d' % row)
-        row_col_end = xl_cell_to_rowcol('BB%d' % row)
-        for j in range(row_col_end[1] - row_col_start[1] + 1):
-            col = row_col_start[1] + j
-            worksheet.write(row - 1, col, '', format_border_bottom)
-
-        # результат
-        row = stage5_first_row_fightings_top + 41
-        merge_cells_result5 = 'AT%d:BB%d' % (row, row + 4)
-        worksheet.merge_range(merge_cells_result5, '')
-
-        # правая граница
-        row1 = stage5_first_row_fightings_top
-        row2 = stage5_first_row_fightings_bottom - 1
-        cell_template = 'BB%d'
-        for j in range(row2 - row1 + 1):
-            format = format_border_right
-            if j == 0:
-                format == format_border_corner_top_right
-            if j == row2 - row1:
-                format == format_border_corner_bottom_right
-            cell = cell_template % (row1 + j)
-            worksheet.write(cell, '', format)
-
-        #стадия 6
+        #стадия 6 - чемпион
         worksheet.merge_range('BC93:BN95', '', format_merge_fighting_member)
         row = 95
         row_col_start = xl_cell_to_rowcol('BC%d' % row)
@@ -790,8 +605,6 @@ class ListMeetingDialog(QDialog):
         for j in range(row_col_end[1] - row_col_start[1] + 1):
             col = row_col_start[1] + j
             worksheet.write(row, col, '', format_border_top)
-
-        worksheet.write('BC93', 'чемпион')
 
         ##########################################
         #судьи
@@ -894,7 +707,7 @@ class ListMeetingDialog(QDialog):
                 member = meet_members_in_weight[i]
                 member_and_team = '%s, %s' % (member.get_short_name(), member.club)
                 birthday = member.birthday
-                member_category = self.dbm.get_member_category(member.category)
+                member_category = self.categories_dict[int(member.category)]
                 rank = member_category.name
                 region = member.region.replace('\\', "")
                 trainer = member.trainer.replace('\\', "")
