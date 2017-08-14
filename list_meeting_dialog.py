@@ -581,6 +581,10 @@ class ListMeetingDialog(QDialog):
                     cell = '%s%d' % (col_border_end, (row1 + j))
                     worksheet.write(cell, '', format)
 
+                #уголки
+                worksheet.write('%s%d' % (col_border_end, row1), '', format_border_corner_top_right)
+                worksheet.write('%s%d' % (col_border_end, row2), '', format_border_corner_bottom_right)
+
 
         #стадия 1
         draw_stage(worksheet, 16, 'C%d:AA%d', 17, 23, 2, 10, 'C', 'Z', 'R%d:Z%d', 22)
