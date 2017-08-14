@@ -11,6 +11,7 @@ import xlsxwriter
 from xlsxwriter.utility import xl_rowcol_to_cell, xl_cell_to_rowcol
 import datetime
 import math
+import operator
 import subprocess
 
 
@@ -532,11 +533,27 @@ class ListMeetingDialog(QDialog):
         fr_rounds.reverse()
 
         def draw_stage(worksheet, fr_round, template_member_merge, row_member1, row_member2, member_h, row_interval,
-                       col_border_start, col_border_end, template_result_merge, bottom_result_row):
+                       col_border_start, col_border_end, template_result_merge, bottom_result_row, prev_stage_fightings):
             fightings_by_round = self.fighting_service.fightings_info[wcat.id].fightings_by_round
             fightings = fightings_by_round.get(fr_round, [])
+
+            stage_fightings = []
+            if not prev_stage_fightings:
+                fightings.sort(key=operator.attrgetter("order_num"), reverse=False)
+
             for i in range(fr_round):
-                fighting = fightings[i] if i <= len(fightings) - 1 else None
+                fighting_prev1 = prev_stage_fightings[i*2] if i*2<=len(prev_stage_fightings)-1 else None
+                #fighting_prev2 = prev_stage_fightings[i*2+1] if i*2+1<=len(prev_stage_fightings)-1 else None
+                prev_winner = fighting_prev1.winner_id if fighting_prev1 else None
+                fighting = None
+                if not prev_stage_fightings:
+                    fighting = fightings[i] if i <= len(fightings) - 1 else None
+                    if fighting:
+                        stage_fightings.append(fighting)
+                else:
+                    fighting = next((f for f in fightings if f.winner_id == prev_winner), None)
+                    if fighting:
+                        stage_fightings.append(fighting)
 
                 # участник 1
                 member1 = self.members_dict.get(fighting.member_a_id, None) if fighting else None
@@ -585,21 +602,23 @@ class ListMeetingDialog(QDialog):
                 worksheet.write('%s%d' % (col_border_end, row1), '', format_border_corner_top_right)
                 worksheet.write('%s%d' % (col_border_end, row2), '', format_border_corner_bottom_right)
 
+            return stage_fightings
+
 
         #стадия 1
-        draw_stage(worksheet, 16, 'C%d:AA%d', 17, 23, 2, 10, 'C', 'Z', 'R%d:Z%d', 22)
+        stage1_fightings = draw_stage(worksheet, 16, 'C%d:AA%d', 17, 23, 2, 10, 'C', 'Z', 'R%d:Z%d', 22, [])
 
         #стадия 2
-        draw_stage(worksheet, 8, 'AA%d:AM%d', 19, 31, 2, 20, 'AA', 'AG', 'AB%d:AG%d', 27)
+        stage2_fightings = draw_stage(worksheet, 8, 'AA%d:AM%d', 19, 31, 2, 20, 'AA', 'AG', 'AB%d:AG%d', 27, stage1_fightings)
 
         #стадия 3
-        draw_stage(worksheet, 4, 'AH%d:AT%d', 23, 46, 3, 40, 'AH', 'AN', 'AI%d:AN%d', 37)
+        stage3_fightings = draw_stage(worksheet, 4, 'AH%d:AT%d', 23, 46, 3, 40, 'AH', 'AN', 'AI%d:AN%d', 37, stage2_fightings)
 
         #стадия 4
-        draw_stage(worksheet, 2, 'AO%d:BA%d', 33, 76, 3, 80, 'AO', 'AU', 'AO%d:AU%d', 57)
+        stage4_fightings = draw_stage(worksheet, 2, 'AO%d:BA%d', 33, 76, 3, 80, 'AO', 'AU', 'AO%d:AU%d', 57, stage3_fightings)
 
         #стадия 5
-        draw_stage(worksheet, 1, 'AV%d:BJ%d', 53, 136, 3, 0, 'AV', 'BB', 'AT%d:BB%d', 97)
+        stage5_fightings = draw_stage(worksheet, 1, 'AV%d:BJ%d', 53, 136, 3, 0, 'AV', 'BB', 'AT%d:BB%d', 97, stage4_fightings)
 
         #стадия 6 - чемпион
         worksheet.merge_range('BC93:BN95', '', format_merge_fighting_member)
