@@ -119,6 +119,7 @@ class Fighting():
             self.winner_id = row[6]
             self.loser_id = row[7]
             self.weightcategory_id = row[8]
+            self.order_num = row[9]
 
 
 class Ring():

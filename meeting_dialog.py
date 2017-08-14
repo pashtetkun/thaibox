@@ -417,6 +417,8 @@ class MeetingDialog(QDialog):
         wcat = next((x for x in self.weight_categories if x.id == weightcatid), None)
         print("weightcategory: ", wcat.name, "members: ", len(members), "fr_round: ", fractional_round)
 
+        order_num = self.fighting_service.get_fightings_count_in_weight(wcat)
+
         while len(members) > 0:
 
             fighting = Fighting()
@@ -446,6 +448,8 @@ class MeetingDialog(QDialog):
                 fighting.member_b_id = mem_b.id
 
             try:
+                order_num += 1
+                fighting.order_num = order_num
                 self.dbm.insert_fighting(fighting)
             except Exception as e:
                 print(e)

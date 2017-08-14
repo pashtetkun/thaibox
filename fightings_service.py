@@ -125,6 +125,15 @@ class FightingsService():
                 count += len(fightings)
         return count
 
+    # возвращает число боёв в весе
+    def get_fightings_count_in_weight(self, wcat):
+        count = 0
+        fightings_in_weight = self.fightings_info.get(wcat.id, None)
+        if fightings_in_weight:
+            for round, fightings in fightings_in_weight.fightings_by_round.items():
+                count += len(fightings)
+        return count
+
     #вернуть бой участника в текущем раунде
     def get_fighting(self, member):
         f_in_w = self.fightings_info[member.weight_id]
