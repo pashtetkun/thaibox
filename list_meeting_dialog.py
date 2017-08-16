@@ -438,7 +438,6 @@ class ListMeetingDialog(QDialog):
         # worksheet.write_string(row, 1, datetime.datetime.strftime(datetime.datetime.strptime(meeting[0][1], "%Y-%m-%d"), "%d %B") + " - " + datetime.datetime.strftime(datetime.datetime.strptime(meeting[0][2], "%Y-%m-%d"), "%d %B %Y"), formatmergeH(row, 'B:B', 'Times New Roman', '12', 'black', True, False, 0, 'left', 'vcenter', 15, 3.7))
         ### Мандатная
 
-        print('Документы готовы')
         workbook.close()
         #QMessageBox.information(self, 'Сообщение', 'Документы готовы')
         #subprocess.call(path, shell=True)
@@ -450,6 +449,7 @@ class ListMeetingDialog(QDialog):
         except Exception as e:
             print(e)
 
+        print('Документы готовы')
         self.close()
 
     #Вывод сетки жеребьевки
@@ -551,19 +551,24 @@ class ListMeetingDialog(QDialog):
                     if fighting:
                         stage_fightings.append(fighting)
                 else:
-                    fighting = next((f for f in fightings if f.winner_id == prev_winner), None)
+                    fighting = next((f for f in fightings if f.member_a_id == prev_winner or f.member_b_id == prev_winner), None)
                     if fighting:
                         stage_fightings.append(fighting)
 
+                member1_id = None
+                member2_id = None
+                if fighting:
+                    member1_id = fighting.member_a_id if fighting.member_a_id == prev_winner else fighting.member_b_id
+                    member2_id = fighting.member_b_id if fighting.member_a_id == prev_winner else fighting.member_a_id
                 # участник 1
-                member1 = self.members_dict.get(fighting.member_a_id, None) if fighting else None
+                member1 = self.members_dict.get(member1_id, None) if fighting else None
                 member1_fio = member1.get_short_name() if member1 else ''
                 num_top = row_member1 + i * row_interval
                 merge_cells_top = template_member_merge % (num_top, num_top + member_h - 1)
                 worksheet.merge_range(merge_cells_top, member1_fio, format_merge_fighting_member)
 
                 # участник 2
-                member2 = self.members_dict.get(fighting.member_b_id, None) if fighting else None
+                member2 = self.members_dict.get(member2_id, None) if fighting else None
                 member2_fio = member2.get_short_name() if member2 else ''
                 num_bottom = row_member2 + i * row_interval
                 merge_cells_bottom = template_member_merge % (num_bottom, num_bottom + member_h - 1)
