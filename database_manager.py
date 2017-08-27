@@ -2,6 +2,7 @@ from database import Dbase as db
 from models import *
 
 
+# класс работы с БД (CRUD-операции)
 class DbManager():
 
     def __init__(self):

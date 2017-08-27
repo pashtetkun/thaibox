@@ -470,6 +470,7 @@ class ListMeetingDialog(QDialog):
         workbook.close()
         print('сетки жеребьевки выведены')
 
+    #вывод сетки жеребьевки в отдельном весе (вывод отдельного листа)
     def create_drawing_sheet(self, workbook, wcat):
         sheet_name = wcat.name if len(wcat.name) < 31 else wcat.name[:31]
         worksheet = workbook.add_worksheet(sheet_name)
@@ -532,6 +533,7 @@ class ListMeetingDialog(QDialog):
         fr_rounds.sort()
         fr_rounds.reverse()
 
+        #вывести стадию (1/32, 1/16 и т.д)
         def draw_stage(worksheet, fr_round, template_member_merge, row_member1, row_member2, member_h, row_interval,
                        col_border_start, col_border_end, template_result_merge, bottom_result_row, prev_stage_fightings):
             fightings_by_round = self.fighting_service.fightings_info[wcat.id].fightings_by_round

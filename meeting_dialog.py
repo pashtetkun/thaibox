@@ -161,11 +161,13 @@ class MeetingDialog(QDialog):
 
         self.refresh_round_text()
 
+    #обновить текст "раунд"
     def refresh_round_text(self):
         current_round = self.fighting_service.get_current_round()
         string = str(current_round) if current_round != 0 else "-"
         self.ui.round.setText("раунд %s" % string)
 
+    #обновить текст "стадия"
     def refresh_stage_text(self):
         string = "-"
         if self.current_weight_category:
@@ -194,6 +196,7 @@ class MeetingDialog(QDialog):
             self.ui.mainrefCBox.addItem(referee.fio.replace('\\', ''))
             self.ui.mainclerkCBox.addItem(referee.fio.replace('\\', ''))
 
+    #гобновить комбобокс весовых категорий
     def refresh_weight_categories_combobox(self):
         self.ui.weightcatCBox.clear()
         self.weight_categories_ids = [0]
@@ -227,6 +230,7 @@ class MeetingDialog(QDialog):
                 self.ui.membersList.addItem(item)
                 self.meet_members_items[member.id] = item
 
+    #обработать смену весовой категории
     def weight_category_changed(self):
         indx = self.ui.weightcatCBox.currentIndex()
         if not self.initialize or indx == -1:
@@ -243,11 +247,12 @@ class MeetingDialog(QDialog):
         self.refresh_members_list()
         self.refresh_stage_text()
 
+    #обработать изменение главного судьи
     def main_referee_changed(self):
         indx = self.ui.mainrefCBox.currentIndex()
         self.main_referee = self.referees[indx]
 
-
+    #обработать изменение главного секретаря
     def main_clerk_changed(self):
         indx = self.ui.mainclerkCBox.currentIndex()
         self.main_clerk = self.referees[indx]
@@ -356,6 +361,7 @@ class MeetingDialog(QDialog):
 
     #	pass
 
+    #получить данные о соревновании с формы
     def get_meeting_values(self):
         if not self.meet:
             self.meet = Meeting()
@@ -646,7 +652,7 @@ class MeetingDialog(QDialog):
             member_rival_item = self.meet_members_items[member_rival.id]
             self.set_item_background(member_rival_item, member_status_rival)
 
-
+    #обработать нажатие на элемент в листбоксе участников
     def memberListItem_pressed(self, item):
         member = item.data(QtCore.Qt.UserRole)
         self.ui.addButton.setEnabled(False)
@@ -655,6 +661,7 @@ class MeetingDialog(QDialog):
         else:
             self.ui.removeButton.setEnabled(True)
 
+    #обработать нажатие на элемент в листбоксе спортсменов
     def athletesListItem_pressed(self, item):
         member = item.data(QtCore.Qt.UserRole)
         self.ui.removeButton.setEnabled(False)
@@ -663,6 +670,7 @@ class MeetingDialog(QDialog):
         else:
             self.ui.addButton.setEnabled(True)
 
+    #установить цвет фона на элементе листбокса
     def set_item_background(self, item, member_status):
         #member = item.data(QtCore.Qt.UserRole)
         background = "white"
